@@ -2,6 +2,8 @@ use bevy::{
     diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
     prelude::*,
 };
+use bevy_mod_reqwest::*;
+use signalk;
 
 pub struct MultiDisplay;
 
@@ -51,29 +53,32 @@ fn setup_top_right_text(mut commands: Commands, asset_server: Res<AssetServer>) 
     // Text with one section
     commands.spawn((
         // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_sections([TextSection::from_style(
-            TextStyle {
+        TextBundle::from_sections([
+            TextSection::from_style(TextStyle {
                 font: asset_server.load("fonts/Hack-Bold.ttf"),
                 font_size: 200.0,
                 color: Color::WHITE,
             }),
-            TextSection::new("SOG", TextStyle {
-                font: asset_server.load("fonts/Hack-Regular.ttf"),
-                font_size: 60.0,
-                color: Color::RED,
-            })
-        ]) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Center)
-            // Set the style of the TextBundle itself.
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(60.0),
-                    right: Val::Px(15.0),
-                    ..default()
+            TextSection::new(
+                "SOG",
+                TextStyle {
+                    font: asset_server.load("fonts/Hack-Regular.ttf"),
+                    font_size: 60.0,
+                    color: Color::RED,
                 },
+            ),
+        ]) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(60.0),
+                right: Val::Px(15.0),
                 ..default()
-            }),
+            },
+            ..default()
+        }),
         TopRightText,
     ));
 }
@@ -82,29 +87,32 @@ fn setup_top_left_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Text with one section
     commands.spawn((
         // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_sections([TextSection::from_style(
-            TextStyle {
+        TextBundle::from_sections([
+            TextSection::from_style(TextStyle {
                 font: asset_server.load("fonts/Hack-Bold.ttf"),
                 font_size: 200.0,
                 color: Color::WHITE,
             }),
-            TextSection::new("COG", TextStyle {
-                font: asset_server.load("fonts/Hack-Regular.ttf"),
-                font_size: 60.0,
-                color: Color::RED,
-            })
-        ]) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Center)
-            // Set the style of the TextBundle itself.
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(60.0),
-                    left: Val::Px(15.0),
-                    ..default()
+            TextSection::new(
+                "COG",
+                TextStyle {
+                    font: asset_server.load("fonts/Hack-Regular.ttf"),
+                    font_size: 60.0,
+                    color: Color::RED,
                 },
+            ),
+        ]) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(60.0),
+                left: Val::Px(15.0),
                 ..default()
-            }),
+            },
+            ..default()
+        }),
         TopLeftText,
     ));
 }
@@ -113,59 +121,66 @@ fn setup_bottom_right_text(mut commands: Commands, asset_server: Res<AssetServer
     // Text with one section
     commands.spawn((
         // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_sections([TextSection::from_style(
-            TextStyle {
+        TextBundle::from_sections([
+            TextSection::from_style(TextStyle {
                 font: asset_server.load("fonts/Hack-Bold.ttf"),
                 font_size: 200.0,
                 color: Color::WHITE,
             }),
-            TextSection::new("AWS", TextStyle {
-                font: asset_server.load("fonts/Hack-Regular.ttf"),
-                font_size: 60.0,
-                color: Color::RED,
-            })
-        ]) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Center)
-            // Set the style of the TextBundle itself.
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(5.0),
-                    right: Val::Px(15.0),
-                    ..default()
+            TextSection::new(
+                "AWS",
+                TextStyle {
+                    font: asset_server.load("fonts/Hack-Regular.ttf"),
+                    font_size: 60.0,
+                    color: Color::RED,
                 },
+            ),
+        ]) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(5.0),
+                right: Val::Px(15.0),
                 ..default()
-            }),
+            },
+            ..default()
+        }),
         BottomRightText,
     ));
 }
+
 fn setup_bottom_left_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Text with one section
     commands.spawn((
         // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_sections([TextSection::from_style(
-            TextStyle {
+        TextBundle::from_sections([
+            TextSection::from_style(TextStyle {
                 font: asset_server.load("fonts/Hack-Bold.ttf"),
                 font_size: 200.0,
                 color: Color::WHITE,
             }),
-            TextSection::new("DPT", TextStyle {
-                font: asset_server.load("fonts/Hack-Regular.ttf"),
-                font_size: 60.0,
-                color: Color::RED,
-            })
-        ]) // Set the alignment of the Text
-            .with_text_alignment(TextAlignment::Center)
-            // Set the style of the TextBundle itself.
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(5.0),
-                    left: Val::Px(15.0),
-                    ..default()
+            TextSection::new(
+                "DPT",
+                TextStyle {
+                    font: asset_server.load("fonts/Hack-Regular.ttf"),
+                    font_size: 60.0,
+                    color: Color::RED,
                 },
+            ),
+        ]) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(5.0),
+                left: Val::Px(15.0),
                 ..default()
-            }),
+            },
+            ..default()
+        }),
         BottomLeftText,
     ));
 }
@@ -193,20 +208,14 @@ fn setup_fps_view(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-fn text_update_top_right_text(
-    time: Res<Time>,
-    mut query: Query<&mut Text, With<TopRightText>>,
-) {
+fn text_update_top_right_text(time: Res<Time>, mut query: Query<&mut Text, With<TopRightText>>) {
     let seconds = time.elapsed_seconds();
     for mut text in &mut query {
         text.sections[0].value = format!("{seconds:.2}");
     }
 }
 
-fn text_update_top_left_text(
-    time: Res<Time>,
-    mut query: Query<&mut Text, With<TopLeftText>>,
-) {
+fn text_update_top_left_text(time: Res<Time>, mut query: Query<&mut Text, With<TopLeftText>>) {
     let seconds = time.elapsed_seconds();
     for mut text in &mut query {
         text.sections[0].value = format!("{seconds:.2}");
@@ -222,6 +231,7 @@ fn text_update_bottom_right_text(
         text.sections[0].value = format!("{seconds:.2}");
     }
 }
+
 fn text_update_bottom_left_text(
     time: Res<Time>,
     mut query: Query<&mut Text, With<BottomLeftText>>,
@@ -246,7 +256,39 @@ fn text_update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, Wi
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(ReqwestPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(MultiDisplay)
+        .add_system(get_sk_data)
+        .add_system(handle_sk_data)
+        .insert_resource(ReqTimer(Timer::new(
+            std::time::Duration::from_secs(1),
+            TimerMode::Repeating,
+        )))
         .run();
+}
+
+#[derive(Resource)]
+struct ReqTimer(pub Timer);
+
+fn get_sk_data(mut commands: Commands, time: Res<Time>, mut timer: ResMut<ReqTimer>) {
+    timer.0.tick(time.delta());
+
+    if timer.0.just_finished() {
+        if let Ok(url) = "https://www.boredapi.com/api/activity".try_into() {
+            let req = reqwest::Request::new(reqwest::Method::GET, url);
+            let req = ReqwestRequest(Some(req));
+            commands.spawn(req);
+        }
+    }
+}
+
+fn handle_sk_data(mut commands: Commands, results: Query<(Entity, &ReqwestBytesResult)>) {
+    for (e, res) in results.iter() {
+        let string = res.as_str().unwrap();
+        bevy::log::info!("{string}");
+
+        // Done with this entity
+        commands.entity(e).despawn_recursive();
+    }
 }

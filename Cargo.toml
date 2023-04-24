@@ -6,7 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.10.0"
+bevy = "0.10"
+bevy_mod_reqwest = "0.10.4"
+signalk = "0.2"
 
 [profile.dev]
 opt-level = 1
