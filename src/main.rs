@@ -5,13 +5,11 @@ use bevy::{
 use bevy_mod_reqwest::*;
 use clap::Parser;
 use serde_json;
+use serde_json::Error;
 use signalk;
+use signalk::{V1FullFormat, V1Vessel};
 
 pub struct MultiDisplay;
-
-// Design
-// 000 cog 0.0 sog
-// 000 dpt 0.0 aws
 
 #[derive(Resource)]
 struct Configuration {
@@ -40,17 +38,77 @@ struct ShipData;
 struct CourseOverGround {
     value: f64,
 }
+
+impl CourseOverGround {
+    fn set_from_vessel(&mut self, vessel: &V1Vessel) {
+        if let Some(ref nav) = vessel.navigation {
+            if let Some(ref cog_val) = nav.course_over_ground_magnetic {
+                if let Some(cog) = cog_val.value {
+                    self.value = cog;
+                }
+            }
+            if let Some(ref cog_val) = nav.course_over_ground_true {
+                if let Some(cog) = cog_val.value {
+                    self.value = cog;
+                }
+            }
+        }
+    }
+}
+
 #[derive(Component)]
 struct SpeedOverGround {
     value: f64,
 }
+
+impl SpeedOverGround {
+    fn set_from_vessel(&mut self, vessel: &V1Vessel) {
+        if let Some(ref nav) = vessel.navigation {
+            if let Some(ref sog_val) = nav.speed_over_ground {
+                if let Some(sog) = sog_val.value {
+                    self.value = sog;
+                }
+            }
+        }
+    }
+}
+
 #[derive(Component)]
 struct Depth {
     value: f64,
 }
+
+impl Depth {
+    fn set_from_vessel(&mut self, vessel: &V1Vessel) {
+        if let Some(ref env) = vessel.environment {
+            if let Some(ref env_depth) = env.depth {
+                if let Some(ref depth_num_value) = env_depth.below_transducer {
+                    if let Some(d) = depth_num_value.value {
+                        self.value = d;
+                    }
+                }
+            }
+        }
+    }
+}
+
 #[derive(Component)]
 struct WaterTemperature {
     value: f64,
+}
+
+impl WaterTemperature {
+    fn set_from_vessel(&mut self, vessel: &V1Vessel) {
+        if let Some(ref env) = vessel.environment {
+            if let Some(ref env_water) = env.water {
+                if let Some(ref water_temp_num_value) = env_water.temperature {
+                    if let Some(wt) = water_temp_num_value.value {
+                        self.value = wt;
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Plugin for MultiDisplay {
@@ -62,6 +120,7 @@ impl Plugin for MultiDisplay {
             .add_startup_system(setup_bottom_right_text)
             .add_startup_system(setup_bottom_left_text)
             .add_startup_system(setup_fps_view)
+            .add_system(bevy::window::close_on_esc)
             .add_system(text_update_fps)
             .add_system(text_update_top_right_text)
             .add_system(text_update_top_left_text)
@@ -306,7 +365,7 @@ struct Args {
     #[arg(short, long, default_value = "http://demo.signalk.org/signalk/v1/api/")]
     server: String,
 
-    #[arg(short, long, default_value_t = 0.5)]
+    #[arg(short, long, default_value_t = 5.0)]
     delay: f32,
 }
 fn main() {
@@ -342,13 +401,66 @@ fn get_sk_data(
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
-        bevy::log::info!("Signalk uri: {}", configuration.server_uri);
+        bevy::log::debug!("Signalk uri: {}", configuration.server_uri);
         if let Ok(url) = reqwest::Url::parse(&*configuration.server_uri) {
             let req = reqwest::Request::new(reqwest::Method::GET, url);
             let req = ReqwestRequest(Some(req));
             commands.spawn(req);
         }
     }
+}
+
+fn get_depth_value(vessel: &V1Vessel) -> Option<f64> {
+    if let Some(ref env) = vessel.environment {
+        if let Some(ref env_depth) = env.depth {
+            if let Some(ref depth_num_value) = env_depth.below_transducer {
+                return depth_num_value.value;
+            }
+        }
+    }
+    None
+}
+
+fn get_water_temp_value(vessel: &V1Vessel) -> Option<f64> {
+    if let Some(ref env) = vessel.environment {
+        if let Some(ref env_water) = env.water {
+            if let Some(ref water_temp_num_value) = env_water.temperature {
+                return water_temp_num_value.value;
+            }
+        }
+    }
+    None
+}
+
+fn get_course_over_ground(vessel: &V1Vessel) -> Option<f64> {
+    if let Some(ref nav) = vessel.navigation {
+        if let Some(ref cog_mag_val) = nav.course_over_ground_magnetic {
+            return cog_mag_val.value;
+        }
+        if let Some(ref cog_true_val) = nav.course_over_ground_true {
+            return cog_true_val.value;
+        }
+    }
+    None
+}
+
+fn get_speed_over_ground(vessel: &V1Vessel) -> Option<f64> {
+    if let Some(ref nav) = vessel.navigation {
+        if let Some(ref sog_val) = nav.speed_over_ground {
+            return sog_val.value;
+        }
+    }
+    None
+}
+
+fn res_to_vessel(res: &ReqwestBytesResult) -> Option<V1Vessel> {
+    if let Some(signalk_json_data) = res.as_str() {
+        let opt_sk_data: Result<V1FullFormat, Error> = serde_json::from_str(signalk_json_data);
+        if let Ok(sk_data) = opt_sk_data {
+            return (sk_data.get_self()).cloned();
+        }
+    }
+    None
 }
 
 fn handle_sk_data(
@@ -360,71 +472,21 @@ fn handle_sk_data(
     mut water_temperature: Query<&mut WaterTemperature, With<ShipData>>,
 ) {
     for (e, res) in results.iter() {
-        let signalk_json_data = res.as_str().unwrap();
-        bevy::log::info!("{signalk_json_data}");
-        if let Ok(json_data) = serde_json::from_str(signalk_json_data) {
-            let sk_data: signalk::V1FullFormat = json_data;
-            if let Some(self_vessel) = sk_data.get_self() {
-                if let Some(ref env) = self_vessel.environment {
-                    if let Some(ref env_depth) = env.depth {
-                        if let Some(ref depth_num_value) = env_depth.below_transducer {
-                            if let Some(depth_value) = depth_num_value.value {
-                                bevy::log::info!("depth: {}", depth_value);
-                                for mut depth_v in &mut depth {
-                                    depth_v.value = depth_value;
-                                }
-                            }
-                        }
-                    }
-                    if let Some(ref env_water) = env.water {
-                        if let Some(ref water_temp_num_value) = env_water.temperature {
-                            if let Some(temp_value) = water_temp_num_value.value {
-                                bevy::log::info!("Water Temp: {}", temp_value);
-                                for ref mut temp_v in &mut water_temperature {
-                                    temp_v.value = temp_value;
-                                }
-                            }
-                        }
-                    }
-                }
-                if let Some(ref nav) = self_vessel.navigation {
-                    if let Some(ref cog_mag_val) = nav.course_over_ground_magnetic {
-                        if let Some(cog_mag) = cog_mag_val.value {
-                            bevy::log::info!("cog_mag: {}", cog_mag);
-                            for ref mut cog_v in &mut course_over_ground {
-                                cog_v.value = cog_mag;
-                            }
-                        }
-                    }
-                    if let Some(ref cog_true_val) = nav.course_over_ground_true {
-                        if let Some(cog_true) = cog_true_val.value {
-                            bevy::log::info!("cog_true: {}", cog_true);
-                            for ref mut cog_v in &mut course_over_ground {
-                                cog_v.value = cog_true;
-                            }
-                        }
-                    }
-                    if let Some(ref cog_val) = nav.speed_over_ground {
-                        if let Some(sog) = cog_val.value {
-                            bevy::log::info!("sog: {}", sog);
-                            for ref mut sog_v in &mut speed_over_ground {
-                                sog_v.value = sog;
-                            }
-                        }
-                    }
-                    if let Some(ref pos) = nav.position {
-                        bevy::log::info!(
-                            "Position: lat {} long {}",
-                            pos.value.latitude,
-                            pos.value.longitude
-                        );
-                    }
-                }
+        if let Some(self_vessel) = res_to_vessel(res) {
+            for ref mut cog_v in &mut course_over_ground {
+                cog_v.set_from_vessel(&self_vessel);
+            }
+            for ref mut sog_v in &mut speed_over_ground {
+                sog_v.set_from_vessel(&self_vessel);
+            }
+            for mut depth_v in &mut depth {
+                depth_v.set_from_vessel(&self_vessel);
+            }
+            for ref mut temp_v in &mut water_temperature {
+                temp_v.set_from_vessel(&self_vessel);
             }
         }
-
         // Done with this entity
-
         commands.entity(e).despawn_recursive();
     }
 }
