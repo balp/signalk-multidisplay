@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_mod_reqwest::*;
+use clap::Parser;
 use serde_json;
 use signalk;
 
@@ -11,6 +12,11 @@ pub struct MultiDisplay;
 // Design
 // 000 cog 0.0 sog
 // 000 dpt 0.0 aws
+
+#[derive(Resource)]
+struct Configuration {
+    server_uri: String,
+}
 
 #[derive(Component)]
 struct FpsText;
@@ -294,8 +300,23 @@ fn text_update_fps(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, Wi
     }
 }
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value = "http://demo.signalk.org/signalk/v1/api/")]
+    server: String,
+
+    #[arg(short, long, default_value_t = 0.5)]
+    delay: f32,
+}
 fn main() {
+    let args = Args::parse();
+
+    let configuration = Configuration {
+        server_uri: args.server.clone(),
+    };
     App::new()
+        .insert_resource(configuration)
         .add_plugins(DefaultPlugins)
         .add_plugin(ReqwestPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
@@ -303,7 +324,7 @@ fn main() {
         .add_system(get_sk_data)
         .add_system(handle_sk_data)
         .insert_resource(ReqTimer(Timer::new(
-            std::time::Duration::from_secs(1),
+            std::time::Duration::from_secs_f32(args.delay),
             TimerMode::Repeating,
         )))
         .run();
@@ -312,11 +333,17 @@ fn main() {
 #[derive(Resource)]
 struct ReqTimer(pub Timer);
 
-fn get_sk_data(mut commands: Commands, time: Res<Time>, mut timer: ResMut<ReqTimer>) {
+fn get_sk_data(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut timer: ResMut<ReqTimer>,
+    configuration: Res<Configuration>,
+) {
     timer.0.tick(time.delta());
 
     if timer.0.just_finished() {
-        if let Ok(url) = "http://demo.signalk.org/signalk/v1/api/".try_into() {
+        bevy::log::info!("Signalk uri: {}", configuration.server_uri);
+        if let Ok(url) = reqwest::Url::parse(&*configuration.server_uri) {
             let req = reqwest::Request::new(reqwest::Method::GET, url);
             let req = ReqwestRequest(Some(req));
             commands.spawn(req);
@@ -343,7 +370,7 @@ fn handle_sk_data(
                         if let Some(ref depth_num_value) = env_depth.below_transducer {
                             if let Some(depth_value) = depth_num_value.value {
                                 bevy::log::info!("depth: {}", depth_value);
-                                for (mut depth_v) in &mut depth {
+                                for mut depth_v in &mut depth {
                                     depth_v.value = depth_value;
                                 }
                             }
@@ -353,7 +380,7 @@ fn handle_sk_data(
                         if let Some(ref water_temp_num_value) = env_water.temperature {
                             if let Some(temp_value) = water_temp_num_value.value {
                                 bevy::log::info!("Water Temp: {}", temp_value);
-                                for (mut temp_v) in &mut water_temperature {
+                                for ref mut temp_v in &mut water_temperature {
                                     temp_v.value = temp_value;
                                 }
                             }
@@ -364,7 +391,7 @@ fn handle_sk_data(
                     if let Some(ref cog_mag_val) = nav.course_over_ground_magnetic {
                         if let Some(cog_mag) = cog_mag_val.value {
                             bevy::log::info!("cog_mag: {}", cog_mag);
-                            for (mut cog_v) in &mut course_over_ground {
+                            for ref mut cog_v in &mut course_over_ground {
                                 cog_v.value = cog_mag;
                             }
                         }
@@ -372,7 +399,7 @@ fn handle_sk_data(
                     if let Some(ref cog_true_val) = nav.course_over_ground_true {
                         if let Some(cog_true) = cog_true_val.value {
                             bevy::log::info!("cog_true: {}", cog_true);
-                            for (mut cog_v) in &mut course_over_ground {
+                            for ref mut cog_v in &mut course_over_ground {
                                 cog_v.value = cog_true;
                             }
                         }
@@ -380,7 +407,7 @@ fn handle_sk_data(
                     if let Some(ref cog_val) = nav.speed_over_ground {
                         if let Some(sog) = cog_val.value {
                             bevy::log::info!("sog: {}", sog);
-                            for (mut sog_v) in &mut speed_over_ground {
+                            for ref mut sog_v in &mut speed_over_ground {
                                 sog_v.value = sog;
                             }
                         }
