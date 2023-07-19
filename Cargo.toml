@@ -12,7 +12,7 @@ authors = ["Anders Arnholm <anders@arnholm.se>"]
 
 [dependencies]
 log = "0.4"
-signalk = "0.2"
+signalk = "0.3"
 egui = "0.22"
 eframe = { version = "0.22", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
@@ -42,4 +42,4 @@ opt-level = 2
 opt-level = 3
 
 [patch.crates-io]
-signalk = { path = "../signalk" }
+#signalk = { path = "../signalk" }
