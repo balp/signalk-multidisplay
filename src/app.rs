@@ -1,13 +1,9 @@
-use crate::app::AngularUnit::{Degrees, Radians};
-use crate::communication::SignalKCommunicator;
+use crate::communication::{SignalKCommunicator, SignalKError};
 use eframe::egui;
 use eframe::egui::{RichText, Vec2};
 use egui::Ui;
-use ehttp;
 use log::debug;
-use serde_json;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct TemplateApp {
@@ -15,6 +11,8 @@ pub struct TemplateApp {
     view_config: bool,
     #[serde(skip)]
     communicator: Option<SignalKCommunicator>,
+    #[serde(skip)]
+    layout: SingleValueLayout,
 }
 
 impl Default for TemplateApp {
@@ -23,6 +21,7 @@ impl Default for TemplateApp {
             server: "http://192.168.1.22:3000/signalk".to_owned(),
             view_config: false,
             communicator: None,
+            layout: SingleValueLayout::default(),
         }
     }
 }
@@ -58,6 +57,7 @@ impl eframe::App for TemplateApp {
         let Self {
             server,
             view_config,
+            layout,
             ..
         } = self;
 
@@ -79,12 +79,15 @@ impl eframe::App for TemplateApp {
         // Side panel for config? Maybe a different view?
         if *view_config {
             egui::SidePanel::left("side_panel").show(ctx, |ui| {
-                ui.heading("Side Panel");
+                ui.heading("Configuration");
 
-                ui.horizontal(|ui| {
+                ui.vertical(|ui| {
                     ui.label("Server Address: ");
                     ui.text_edit_singleline(server);
                 });
+
+                ui.add_space(6.);
+                layout.add_config(ui);
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                     ui.horizontal(|ui| {
@@ -95,9 +98,8 @@ impl eframe::App for TemplateApp {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("SignalK Multidisplay");
-            let tmp = SingleValueLayout::default();
             if let Some(ref comm) = self.communicator {
-                tmp.draw_ui(ui, comm);
+                layout.draw_ui(ui, comm);
             }
         });
     }
@@ -146,6 +148,7 @@ impl eframe::App for TemplateApp {
 //  XTE - Cross track error
 
 
+#[derive(Debug, PartialEq)]
 pub enum SpeedUnit {
     MeterPerSecond,
     Knot,
@@ -153,58 +156,34 @@ pub enum SpeedUnit {
     KilometerPerHour,
 }
 
-pub enum AngularUnit {
-    Radians,
-    Degrees,
-}
-
-
-pub struct SpeedThroughWater {
-    name: String,
-    unit_name: String,
-    abbreviation: String,
-}
-
-impl SpeedThroughWater {
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let stw = communicator.get_stw_from_signalk();
-        match stw {
+impl SpeedUnit {
+    fn abbreviation(&self) -> String {
+        match self {
+            SpeedUnit::MeterPerSecond => "m/s".to_string(),
+            SpeedUnit::Knot => "kn".to_string(),
+            SpeedUnit::MilesPerHour => "mph".to_string(),
+            SpeedUnit::KilometerPerHour => "km/h".to_string(),
+        }
+    }
+    fn add_config(&mut self, ui: &mut Ui) {
+        ui.label("Unit of data");
+        egui::ComboBox::from_label("Data type")
+            .selected_text(self.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(self, SpeedUnit::MeterPerSecond, SpeedUnit::MeterPerSecond.abbreviation());
+                ui.selectable_value(self, SpeedUnit::Knot, SpeedUnit::Knot.abbreviation());
+                ui.selectable_value(self, SpeedUnit::MilesPerHour, SpeedUnit::MilesPerHour.abbreviation());
+                ui.selectable_value(self, SpeedUnit::KilometerPerHour, SpeedUnit::KilometerPerHour.abbreviation());
+            });
+    }
+    fn format(&self, value: Result<Option<f64>,SignalKError>) -> String {
+        match value {
             Ok(val) => match val {
                 None => "  -.-".to_owned(),
                 Some(value) => {
-                    format!("{:5.1}", value)
-                }
-            },
-            Err(_) => "-----".to_owned(),
-        }
-    }
-}
-
-impl Default for SpeedThroughWater {
-    fn default() -> Self {
-        Self {
-            name: "Water Speed".to_string(),
-            unit_name: "m/s".to_string(),
-            abbreviation: "STW".to_string(),
-        }
-    }
-}
-
-pub struct SpeedOverGround {
-    name: String,
-    unit_name: String,
-    abbreviation: String,
-    display_unit: SpeedUnit,
-}
-
-impl SpeedOverGround {
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let sog = communicator.get_sog_from_signalk();
-        match sog {
-            Ok(val) => match val {
-                None => "  -.-".to_owned(),
-                Some(value) => {
-                    match self.display_unit {
+                    match self {
                         SpeedUnit::MeterPerSecond => {
                             format!("{:5.2}", value)
                         }
@@ -221,51 +200,49 @@ impl SpeedOverGround {
                             format!("{:5.2}", display_value)
                         }
                     }
+
                 }
             },
             Err(_) => "-----".to_owned(),
         }
     }
-    fn set_display_unit(&mut self, unit: SpeedUnit) {
-        match unit {
-            SpeedUnit::MeterPerSecond => { self.unit_name = "m/s".to_string(); }
-            SpeedUnit::Knot => { self.unit_name = "kn".to_string(); }
-            SpeedUnit::MilesPerHour => { self.unit_name = "mph".to_string(); }
-            SpeedUnit::KilometerPerHour => { self.unit_name = "km/h".to_string(); }
-        }
-        self.display_unit = unit;
-    }
 }
 
-impl Default for SpeedOverGround {
-    fn default() -> Self {
-        Self {
-            name: "Speed Ground".to_string(),
-            unit_name: "kn".to_string(),
-            abbreviation: "SOG".to_string(),
-            display_unit: SpeedUnit::Knot,
+#[derive(Debug, PartialEq)]
+pub enum AngularUnit {
+    Radians,
+    Degrees,
+}
+
+impl AngularUnit {
+    fn abbreviation(&self) -> String {
+        match self {
+            AngularUnit::Radians => "rad".to_string(),
+            AngularUnit::Degrees => "deg".to_string(),
         }
     }
-}
 
-pub struct CourseOverGround {
-    name: String,
-    unit_name: String,
-    abbreviation: String,
-    display_unit: AngularUnit,
-}
+    fn add_config(&mut self, ui: &mut Ui) {
+        ui.label("Unit of data");
+        egui::ComboBox::from_label("Data type")
+            .selected_text(self.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(self, AngularUnit::Degrees, AngularUnit::Degrees.abbreviation());
+                ui.selectable_value(self, AngularUnit::Radians, AngularUnit::Radians.abbreviation());
+            });
+    }
 
-impl CourseOverGround {
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let mut stw = communicator.get_cog_from_signalk();
-        match stw {
+    fn format(&self, value: Result<Option<f64>,SignalKError>) -> String {
+        match value {
             Ok(val) => match val {
                 None => "  -.-".to_owned(),
-                Some(value) => match self.display_unit {
-                    Radians => {
+                Some(value) => match self {
+                    AngularUnit::Radians => {
                         format!("{:5.3}", value)
                     }
-                    Degrees => {
+                    AngularUnit::Degrees => {
                         let display_value = value * 180. / std::f64::consts::PI;
                         format!("{:5.1}", display_value)
                     }
@@ -273,17 +250,81 @@ impl CourseOverGround {
             },
             Err(_) => "-----".to_owned(),
         }
+
     }
-    fn set_display_unit(&mut self, unit: AngularUnit) {
-        match unit {
-            Radians => {
-                self.unit_name = "rad".to_string();
-            }
-            Degrees => {
-                self.unit_name = "deg".to_string();
-            }
+}
+
+
+#[derive(Debug, PartialEq)]
+pub struct SpeedThroughWater {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl SpeedThroughWater {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let stw = communicator.get_stw_from_signalk();
+        self.display_unit.format(stw)
+    }
+
+    fn add_config(&mut self, ui: &mut Ui) {
+        self.display_unit.add_config(ui);
+    }
+}
+
+impl Default for SpeedThroughWater {
+    fn default() -> Self {
+        Self {
+            name: "Water Speed".to_string(),
+            abbreviation: "STW".to_string(),
+            display_unit: SpeedUnit::MeterPerSecond,
         }
-        self.display_unit = unit;
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SpeedOverGround {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl SpeedOverGround {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let sog = communicator.get_sog_from_signalk();
+        self.display_unit.format(sog)
+    }
+
+    fn add_config(&mut self, ui: &mut Ui) {
+        self.display_unit.add_config(ui);
+    }
+}
+
+impl Default for SpeedOverGround {
+    fn default() -> Self {
+        Self {
+            name: "Speed Ground".to_string(),
+            abbreviation: "SOG".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CourseOverGround {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl CourseOverGround {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let stw = communicator.get_cog_from_signalk();
+        self.display_unit.format(stw)
+    }
+    fn add_config(&mut self, ui: &mut Ui) {
+        self.display_unit.add_config(ui);
     }
 }
 
@@ -291,15 +332,14 @@ impl Default for CourseOverGround {
     fn default() -> Self {
         Self {
             name: "Course Over Ground".to_string(),
-            unit_name: "deg".to_string(),
             abbreviation: "COG".to_string(),
-            display_unit: Degrees,
+            display_unit: AngularUnit::Degrees,
         }
     }
 }
 
 pub trait Layout {
-    fn draw_ui(self, ui: &mut Ui, communicator: &SignalKCommunicator);
+    fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator);
 }
 
 
@@ -310,19 +350,118 @@ pub trait Layout {
 // - Four values
 
 
-#[derive(Default)]
+#[derive(Debug, PartialEq)]
+enum LayoutData {
+    LayoutSpeedThroughWater(SpeedThroughWater),
+    LayoutSpeedOverGround(SpeedOverGround),
+    LayoutCourseOverGround(CourseOverGround),
+}
+
+impl LayoutData {
+    fn abbreviation(&self) -> String {
+        match self {
+            LayoutData::LayoutSpeedThroughWater(value) => {
+                value.abbreviation.to_string()
+            }
+            LayoutData::LayoutSpeedOverGround(value) => {
+                value.abbreviation.to_string()
+            }
+            LayoutData::LayoutCourseOverGround(value) => {
+                value.abbreviation.to_string()
+            }
+        }
+    }
+
+    fn add_config(&mut self, ui: &mut Ui) {
+        match self {
+            LayoutData::LayoutSpeedThroughWater(layout) => {
+                layout.add_config(ui);
+            }
+            LayoutData::LayoutSpeedOverGround(layout) => {
+                layout.add_config(ui);
+            }
+            LayoutData::LayoutCourseOverGround(layout) => {
+                layout.add_config(ui)
+            }
+        }
+    }
+}
+
 pub struct SingleValueLayout {
-    value: SpeedOverGround,
+    value: LayoutData,
+}
+
+impl Default for SingleValueLayout {
+    fn default() -> Self {
+        Self {
+            value: LayoutData::LayoutCourseOverGround(CourseOverGround::default()),
+        }
+    }
 }
 
 impl SingleValueLayout {
     fn fmt_stw(&self, communicator: &SignalKCommunicator) -> String {
-        self.value.fmt_value(communicator)
+        match &self.value {
+            LayoutData::LayoutSpeedThroughWater(value) => {
+                value.fmt_value(communicator)
+            }
+            LayoutData::LayoutSpeedOverGround(value) => {
+                value.fmt_value(communicator)
+            }
+            LayoutData::LayoutCourseOverGround(value) => {
+                value.fmt_value(communicator)
+            }
+        }
+    }
+    fn value_abbreviation(&self) -> String {
+        self.value.abbreviation()
+    }
+
+    fn value_unit_name(&self) -> String {
+        match &self.value {
+            LayoutData::LayoutSpeedThroughWater(value) => {
+                value.display_unit.abbreviation()
+            }
+            LayoutData::LayoutSpeedOverGround(value) => {
+                value.display_unit.abbreviation()
+            }
+            LayoutData::LayoutCourseOverGround(value) => {
+                value.display_unit.abbreviation()
+            }
+        }
+    }
+
+    fn value_name(&self) -> String {
+        match &self.value {
+            LayoutData::LayoutSpeedThroughWater(value) => {
+                value.name.to_string()
+            }
+            LayoutData::LayoutSpeedOverGround(value) => {
+                value.name.to_string()
+            }
+            LayoutData::LayoutCourseOverGround(value) => {
+                value.name.to_string()
+            }
+        }
+    }
+    fn add_config(&mut self, ui: &mut Ui) {
+        let Self { value } = self;
+        ui.label("Data to display");
+        egui::ComboBox::from_label("Display Value")
+            .selected_text(value.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(value, LayoutData::LayoutCourseOverGround(CourseOverGround::default()), "COG");
+                ui.selectable_value(value, LayoutData::LayoutSpeedOverGround(SpeedOverGround::default()), "SOG");
+                ui.selectable_value(value, LayoutData::LayoutSpeedThroughWater(SpeedThroughWater::default()), "STW");
+            });
+        value.add_config(ui);
     }
 }
 
 impl Layout for SingleValueLayout {
-    fn draw_ui(self, ui: &mut Ui, communicator: &SignalKCommunicator) {
+    fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {
         ui.group(|ui| {
             ui.spacing_mut().item_spacing.x = 0.0;
             ui.vertical(|ui| {
@@ -331,13 +470,13 @@ impl Layout for SingleValueLayout {
                     ui.label(RichText::new(current_stw).size(300.0).monospace());
                     ui.horizontal(|ui| {
                         ui.vertical_centered(|ui| {
-                            ui.label(RichText::new(self.value.abbreviation.as_str()).size(50.0));
-                            ui.label(RichText::new(self.value.unit_name.as_str()).size(100.0));
+                            ui.label(RichText::new(self.value_abbreviation()).size(50.0));
+                            ui.label(RichText::new(self.value_unit_name()).size(100.0));
                         });
                     });
                 });
                 ui.vertical_centered(|ui| {
-                    ui.label(RichText::new(self.value.name.as_str()).size(150.0));
+                    ui.label(RichText::new(self.value_name()).size(150.0));
                 });
             });
             ui.set_min_size(Vec2::new(300.0, 150.0));
