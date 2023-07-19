@@ -1,216 +1,18 @@
+use crate::app::AngularUnit::{Degrees, Radians};
+use crate::communication::SignalKCommunicator;
 use eframe::egui;
 use eframe::egui::{RichText, Vec2};
+use egui::Ui;
 use ehttp;
-use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
-use log::{debug, error, info};
+use log::debug;
 use serde_json;
-use signalk::{
-    Storage, V1DeltaFormat, V1Discovery, V1FullFormat,
-};
-use std::sync::mpsc::{channel, Receiver, Sender};
-
-#[derive(Debug)]
-pub enum SignalKError {
-    Oops,
-}
-
-pub struct WebsocketHandler {
-    ws_sender: WsSender,
-    ws_receiver: WsReceiver,
-}
-
-impl WebsocketHandler {
-    fn recv_signalk_delta_messages(&mut self, storage: &mut Storage) {
-        if let Some(ws_event) = self.ws_receiver.try_recv() {
-            Self::handle_ws_event(storage, ws_event);
-        }
-    }
-
-    fn handle_ws_event(storage: &mut Storage, ws_event: WsEvent) {
-        debug!("Got ws event: {:?}", ws_event);
-        match ws_event {
-            WsEvent::Opened => {
-                info!("WebSocket delta opened.");
-            }
-            WsEvent::Message(ws_message) => {
-                Self::handle_ws_message(storage, ws_message);
-            }
-            WsEvent::Error(ws_error) => {
-                error!("Websocket error: {:?}", ws_error)
-            }
-            WsEvent::Closed => {
-                info!("WebSocket delta closed.");
-            }
-        }
-    }
-
-    fn handle_ws_message(storage: &mut Storage, ws_message: WsMessage) {
-        match ws_message {
-            WsMessage::Binary(_) => {
-                debug!("Binary ws message.");
-            }
-            WsMessage::Text(data) => {
-                debug!("Text WS Message");
-                let maybe_sk_delta: serde_json::Result<V1DeltaFormat> =
-                    serde_json::from_str(data.as_str());
-                if let Ok(sk_delta) = maybe_sk_delta {
-                    storage.update(&sk_delta);
-                }
-            }
-            WsMessage::Unknown(_) => {
-                debug!("Unknown ws message.");
-            }
-            WsMessage::Ping(_) => {
-                debug!("Ping ws message.");
-            }
-            WsMessage::Pong(_) => {
-                debug!("Pong ws message.");
-            }
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct SignalKCommunicator {
-    signalk_data: Option<Storage>,
-    signalk_discovery: Option<V1Discovery>,
-    discovery_rx: Option<Receiver<V1Discovery>>,
-    full_rx: Option<Receiver<V1FullFormat>>,
-    ws_handler: Option<WebsocketHandler>,
-}
-
-impl SignalKCommunicator {
-
-    fn rx_data(&mut self, ctx: &egui::Context) {
-        if let Some(ref mut discovery_rx_channel) = self.discovery_rx {
-            match discovery_rx_channel.try_recv() {
-                Ok(discovery) => {
-                    ctx.request_repaint();
-                    self.signalk_discovery = Some(discovery);
-                    let (full_sk_tx, full_sk_rx): (Sender<V1FullFormat>, Receiver<V1FullFormat>) =
-                        channel();
-                    self.full_rx = Some(full_sk_rx);
-                    if let Some(ref self_discovery) = self.signalk_discovery {
-                        if let Some(ref endpoint) = self_discovery.get_v1_http_endpoint() {
-                            let request = ehttp::Request::get(endpoint);
-                            let ctx_clone = ctx.clone();
-                            ehttp::fetch(request, move |result: ehttp::Result<ehttp::Response>| {
-                                match result {
-                                    Ok(response) => {
-                                        debug!("Full Got: {:?}", response);
-                                        let full: serde_json::Result<V1FullFormat> =
-                                            serde_json::from_slice(&response.bytes);
-                                        debug!("ful data: {:?}", full);
-                                        if let Ok(full_value) = full {
-                                            ctx_clone.request_repaint();
-                                            if let Err(err) = full_sk_tx.send(full_value) {
-                                                error!("Can't send full back {:?}", err)
-                                            }
-                                        }
-                                    }
-                                    Err(err) => {
-                                        debug!("Get full error: {:?}", err);
-                                    }
-                                }
-                            });
-                            self.discovery_rx = None;
-                        }
-                        if let Some(ref endpoint) = self_discovery.get_v1_ws_endpoint() {
-                            debug!("Connect websocket to {:?}", endpoint);
-                            let ws_url = endpoint.to_string();
-                            let ctx_clone = ctx.clone();
-                            info!("Connect to websocket url: {}", ws_url);
-                            let wakeup = move || ctx_clone.request_repaint();
-                            match ewebsock::connect_with_wakeup(&ws_url, wakeup) {
-                                Ok((ws_sender, ws_receiver)) => {
-                                    debug!("Websocket connected ok!");
-                                    self.ws_handler = Some(WebsocketHandler {
-                                        ws_sender,
-                                        ws_receiver,
-                                    });
-                                }
-                                Err(error) => {
-                                    error!("Failed to connect to {:?}: {}", &ws_url, error);
-                                }
-                            }
-                        }
-                    }
-                }
-                Err(_) => {
-                    error!("Unable to recv discovery data");
-                }
-            }
-        }
-        if let Some(ref mut full_rx_channel) = self.full_rx {
-            match full_rx_channel.try_recv() {
-                Ok(full) => {
-                    ctx.request_repaint();
-                    self.signalk_data = Some(Storage::new(full));
-                }
-                Err(_) => {}
-            }
-        }
-        if let Some(ref mut storage) = self.signalk_data {
-            if let Some(ref mut ws_handler) = self.ws_handler {
-                ws_handler.recv_signalk_delta_messages(storage);
-            }
-        }
-    }
-    fn set_up_server_connections(&mut self, server: String) {
-        let request = ehttp::Request::get(server);
-        let (signalk_tx, signalk_rx): (Sender<V1Discovery>, Receiver<V1Discovery>) = channel();
-        self.discovery_rx = Some(signalk_rx);
-        ehttp::fetch(
-            request,
-            move |result: ehttp::Result<ehttp::Response>| match result {
-                Ok(response) => {
-                    debug!("Got: {:?}", response);
-                    debug!("data: {:?}", response.bytes);
-                    let discovery: serde_json::Result<V1Discovery> =
-                        serde_json::from_slice(&response.bytes);
-                    debug!("data: {:?}", discovery);
-                    if let Ok(discovery_value) = discovery {
-                        if let Err(e) = signalk_tx.send(discovery_value) {
-                            error!("Can't send discovery back {:?}", e);
-                        }
-                    }
-                }
-                Err(err) => {
-                    debug!("Error: {:?}", err);
-                }
-            },
-        );
-
-        debug!("Send request to discover signalk.");
-    }
-
-    fn get_stw_from_signalk(&self) -> Result<Option<f64>, SignalKError> {
-        return if let Some(ref storage) = self.signalk_data {
-            if let Some(_self_vessel) = storage.get().get_self() {
-                if let Some(ref navigation) = _self_vessel.navigation {
-                    if let Some(ref stw_number) = navigation.speed_through_water {
-                        Ok(stw_number.value)
-                    } else {
-                        Ok(None)
-                    }
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Err(SignalKError::Oops)
-            }
-        } else {
-            Err(SignalKError::Oops)
-        };
-    }
-
-}
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct TemplateApp {
     server: String,
+    view_config: bool,
     #[serde(skip)]
     communicator: Option<SignalKCommunicator>,
 }
@@ -219,6 +21,7 @@ impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             server: "http://192.168.1.22:3000/signalk".to_owned(),
+            view_config: false,
             communicator: None,
         }
     }
@@ -241,23 +44,67 @@ impl TemplateApp {
         app.communicator = Some(communicator);
         app
     }
+}
 
-
-    fn fmt_stw(&self) -> String {
-        if let Some(ref sk_com) = self.communicator {
-            let stw = sk_com.get_stw_from_signalk();
-            match stw {
-                Ok(val) => match val {
-                    None => "  -.-".to_owned(),
-                    Some(value) => {
-                        format!("{:5.1}", value)
-                    }
-                },
-                Err(_) => "-----".to_owned(),
-            }
-        } else {
-            "NOCOM".to_owned()
+impl eframe::App for TemplateApp {
+    /// Called each time the UI needs repainting, which may be many times per second.
+    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.request_repaint();
+        if let Some(ref mut sk_com) = self.communicator {
+            sk_com.handle_data(ctx);
         }
+
+        let Self {
+            server,
+            view_config,
+            ..
+        } = self;
+
+        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            // The top panel is often a good place for a menu bar:
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Config").clicked() {
+                        *view_config = !*view_config;
+                    }
+                    if ui.button("Quit").clicked() {
+                        _frame.close();
+                    }
+                });
+            });
+        });
+
+        // Side panel for config? Maybe a different view?
+        if *view_config {
+            egui::SidePanel::left("side_panel").show(ctx, |ui| {
+                ui.heading("Side Panel");
+
+                ui.horizontal(|ui| {
+                    ui.label("Server Address: ");
+                    ui.text_edit_singleline(server);
+                });
+
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+                    ui.horizontal(|ui| {
+                        egui::warn_if_debug_build(ui);
+                    });
+                });
+            });
+        }
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("SignalK Multidisplay");
+            let tmp = SingleValueLayout::default();
+            if let Some(ref comm) = self.communicator {
+                tmp.draw_ui(ui, comm);
+            }
+        });
+    }
+
+    /// Called by the frame work to save state before shutdown.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
     }
 }
 
@@ -298,78 +145,133 @@ impl TemplateApp {
 //  WND - Velocity made good upwind
 //  XTE - Cross track error
 
-impl eframe::App for TemplateApp {
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.request_repaint();
-        if let Some(ref mut sk_com) = self.communicator {
-            sk_com.rx_data(ctx);
+// Layout variants
+// - Single Value
+// - Dual Value
+// - Triple Value
+// - Four values
+
+pub struct SpeedThroughWater {
+    name: String,
+    unit_name: String,
+    abbreviation: String,
+}
+
+impl SpeedThroughWater {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let stw = communicator.get_stw_from_signalk();
+        match stw {
+            Ok(val) => match val {
+                None => "  -.-".to_owned(),
+                Some(value) => {
+                    format!("{:5.1}", value)
+                }
+            },
+            Err(_) => "-----".to_owned(),
         }
+    }
+}
 
-        let Self { server, .. } = self;
+impl Default for SpeedThroughWater {
+    fn default() -> Self {
+        Self {
+            name: "Water Speed".to_string(),
+            unit_name: "m/s".to_string(),
+            abbreviation: "STW".to_string(),
+        }
+    }
+}
 
-        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        _frame.close();
+pub enum AngularUnit {
+    Radians,
+    Degrees,
+}
+
+pub struct CourseOverGround {
+    name: String,
+    unit_name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl CourseOverGround {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let mut stw = communicator.get_cog_from_signalk();
+        match stw {
+            Ok(val) => match val {
+                None => "  -.-".to_owned(),
+                Some(value) => match self.display_unit {
+                    Radians => {
+                        format!("{:5.3}", value)
                     }
-                });
-            });
-        });
+                    Degrees => {
+                        let display_value = value * 180. / std::f64::consts::PI;
+                        format!("{:5.1}", display_value)
+                    }
+                },
+            },
+            Err(_) => "-----".to_owned(),
+        }
+    }
+    fn set_display_unit(&mut self, unit: AngularUnit) {
+        match unit {
+            Radians => {
+                self.unit_name = "rad".to_string();
+            }
+            Degrees => {
+                self.unit_name = "deg".to_string();
+            }
+        }
+        self.display_unit = unit;
+    }
+}
 
-        // Side panel for config? Maybe a different view?
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
+impl Default for CourseOverGround {
+    fn default() -> Self {
+        Self {
+            name: "Course Over Ground".to_string(),
+            unit_name: "deg".to_string(),
+            abbreviation: "COG".to_string(),
+            display_unit: Degrees,
+        }
+    }
+}
 
-            ui.horizontal(|ui| {
-                ui.label("Server Address: ");
-                ui.text_edit_singleline(server);
-            });
+pub trait Layout {
+    fn draw_ui(self, ui: &mut Ui, communicator: &SignalKCommunicator);
+}
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+#[derive(Default)]
+pub struct SingleValueLayout {
+    value: CourseOverGround,
+}
+
+impl SingleValueLayout {
+    fn fmt_stw(&self, communicator: &SignalKCommunicator) -> String {
+        self.value.fmt_value(communicator)
+    }
+}
+
+impl Layout for SingleValueLayout {
+    fn draw_ui(self, ui: &mut Ui, communicator: &SignalKCommunicator) {
+        ui.group(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.vertical(|ui| {
                 ui.horizontal(|ui| {
-                    egui::warn_if_debug_build(ui);
-                });
-            });
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            //
-            // Layout:  STW
-            //
-            //  0.0  STW
-            //       kt
-            //  Water Speed
-            ui.heading("SignalK Multidisplay");
-            ui.group(|ui| {
-                ui.spacing_mut().item_spacing.x = 0.0;
-                ui.vertical(|ui| {
+                    let current_stw = self.fmt_stw(communicator);
+                    ui.label(RichText::new(current_stw).size(300.0).monospace());
                     ui.horizontal(|ui| {
-                        let current_stw = self.fmt_stw();
-                        ui.label(RichText::new(current_stw).size(300.0).monospace());
-                        ui.horizontal(|ui| {
-                            ui.vertical_centered(|ui| {
-                                ui.label(RichText::new("STW").size(50.0));
-                                ui.label(RichText::new("kt").size(100.0));
-                            });
+                        ui.vertical_centered(|ui| {
+                            ui.label(RichText::new(self.value.abbreviation.as_str()).size(50.0));
+                            ui.label(RichText::new(self.value.unit_name.as_str()).size(100.0));
                         });
                     });
-                    ui.vertical_centered(|ui| {
-                        ui.label(RichText::new("Water Speed").size(150.0));
-                    });
                 });
-                ui.set_min_size(Vec2::new(300.0, 150.0));
+                ui.vertical_centered(|ui| {
+                    ui.label(RichText::new(self.value.name.as_str()).size(150.0));
+                });
             });
+            ui.set_min_size(Vec2::new(300.0, 150.0));
         });
-    }
-
-    /// Called by the frame work to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
     }
 }
