@@ -145,11 +145,19 @@ impl eframe::App for TemplateApp {
 //  WND - Velocity made good upwind
 //  XTE - Cross track error
 
-// Layout variants
-// - Single Value
-// - Dual Value
-// - Triple Value
-// - Four values
+
+pub enum SpeedUnit {
+    MeterPerSecond,
+    Knot,
+    MilesPerHour,
+    KilometerPerHour,
+}
+
+pub enum AngularUnit {
+    Radians,
+    Degrees,
+}
+
 
 pub struct SpeedThroughWater {
     name: String,
@@ -182,9 +190,62 @@ impl Default for SpeedThroughWater {
     }
 }
 
-pub enum AngularUnit {
-    Radians,
-    Degrees,
+pub struct SpeedOverGround {
+    name: String,
+    unit_name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl SpeedOverGround {
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let sog = communicator.get_sog_from_signalk();
+        match sog {
+            Ok(val) => match val {
+                None => "  -.-".to_owned(),
+                Some(value) => {
+                    match self.display_unit {
+                        SpeedUnit::MeterPerSecond => {
+                            format!("{:5.2}", value)
+                        }
+                        SpeedUnit::Knot => {
+                            let display_value = value * 3600. / 1851.85;
+                            format!("{:5.1}", display_value)
+                        }
+                        SpeedUnit::MilesPerHour => {
+                            let display_value = value * 3600. / 1609.344;
+                            format!("{:5.1}", display_value)
+                        }
+                        SpeedUnit::KilometerPerHour => {
+                            let display_value = value * 3.600;
+                            format!("{:5.2}", display_value)
+                        }
+                    }
+                }
+            },
+            Err(_) => "-----".to_owned(),
+        }
+    }
+    fn set_display_unit(&mut self, unit: SpeedUnit) {
+        match unit {
+            SpeedUnit::MeterPerSecond => { self.unit_name = "m/s".to_string(); }
+            SpeedUnit::Knot => { self.unit_name = "kn".to_string(); }
+            SpeedUnit::MilesPerHour => { self.unit_name = "mph".to_string(); }
+            SpeedUnit::KilometerPerHour => { self.unit_name = "km/h".to_string(); }
+        }
+        self.display_unit = unit;
+    }
+}
+
+impl Default for SpeedOverGround {
+    fn default() -> Self {
+        Self {
+            name: "Speed Ground".to_string(),
+            unit_name: "kn".to_string(),
+            abbreviation: "SOG".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
 }
 
 pub struct CourseOverGround {
@@ -241,9 +302,17 @@ pub trait Layout {
     fn draw_ui(self, ui: &mut Ui, communicator: &SignalKCommunicator);
 }
 
+
+// Layout variants
+// - Single Value
+// - Dual Value
+// - Triple Value
+// - Four values
+
+
 #[derive(Default)]
 pub struct SingleValueLayout {
-    value: CourseOverGround,
+    value: SpeedOverGround,
 }
 
 impl SingleValueLayout {
