@@ -208,7 +208,14 @@ impl SignalKCommunicator {
             },
         );
     }
-
+    pub(crate) fn get_path_from_signalk(&self, path: String) -> Result<Option<f64>, SignalKError> {
+        return if let Some(ref storage) = self.signalk_data {
+            // storage.get_f64_for_path(path)
+            Err(SignalKError::Oops)
+        } else {
+            Err(SignalKError::Oops)
+        }
+    }
     pub(crate) fn get_stw_from_signalk(&self) -> Result<Option<f64>, SignalKError> {
         return if let Some(ref storage) = self.signalk_data {
             if let Some(_self_vessel) = storage.get().get_self() {

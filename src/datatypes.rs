@@ -71,7 +71,7 @@ impl DataValues {
     }
 
     pub fn name(&self) -> String {
-        match &self.value {
+        match &self {
             DataValues::ValueSpeedThroughWater(value) => value.name.to_string(),
             DataValues::ValueSpeedOverGround(value) => value.name.to_string(),
             DataValues::ValueCourseOverGround(value) => value.name.to_string(),

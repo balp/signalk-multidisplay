@@ -2,7 +2,7 @@ use crate::communication::SignalKCommunicator;
 use crate::datatypes::{CourseOverGround, DataValues, SpeedOverGround, SpeedThroughWater};
 use eframe::egui;
 use egui::{RichText, Ui, Vec2};
-use emath::vec2::Vec2;
+
 
 // Layout variants
 // - Single Value
