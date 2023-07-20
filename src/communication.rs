@@ -73,6 +73,38 @@ pub struct SignalKCommunicator {
 }
 
 impl SignalKCommunicator {
+    pub(crate) fn disconnect_server(&mut self) {
+        self.signalk_data = None;
+        self.signalk_discovery = None;
+        self.discovery_rx = None;
+        self.full_rx = None;
+        self.ws_handler = None;
+    }
+    pub(crate) fn set_up_server_connections(&mut self, server: String) {
+        let request = ehttp::Request::get(server);
+        let (signalk_tx, signalk_rx): (Sender<V1Discovery>, Receiver<V1Discovery>) = channel();
+        self.discovery_rx = Some(signalk_rx);
+        ehttp::fetch(
+            request,
+            move |result: ehttp::Result<ehttp::Response>| match result {
+                Ok(response) => {
+                    let discovery: serde_json::Result<V1Discovery> =
+                        serde_json::from_slice(&response.bytes);
+                    if let Ok(discovery_value) = discovery {
+                        if let Err(e) = signalk_tx.send(discovery_value) {
+                            error!("Can't send discovery back {:?}", e);
+                        } else {
+                            info!("Discovery message sent");
+                        }
+                    }
+                }
+                Err(err) => {
+                    error!("Error: {:?}", err);
+                }
+            },
+        );
+    }
+
     pub(crate) fn handle_data(&mut self, ctx: &egui::Context) {
         self.handle_discovery(ctx);
         self.handle_full_message(ctx);
@@ -184,30 +216,7 @@ impl SignalKCommunicator {
         );
     }
 
-    pub(crate) fn set_up_server_connections(&mut self, server: String) {
-        let request = ehttp::Request::get(server);
-        let (signalk_tx, signalk_rx): (Sender<V1Discovery>, Receiver<V1Discovery>) = channel();
-        self.discovery_rx = Some(signalk_rx);
-        ehttp::fetch(
-            request,
-            move |result: ehttp::Result<ehttp::Response>| match result {
-                Ok(response) => {
-                    let discovery: serde_json::Result<V1Discovery> =
-                        serde_json::from_slice(&response.bytes);
-                    if let Ok(discovery_value) = discovery {
-                        if let Err(e) = signalk_tx.send(discovery_value) {
-                            error!("Can't send discovery back {:?}", e);
-                        } else {
-                            info!("Discovery message sent");
-                        }
-                    }
-                }
-                Err(err) => {
-                    error!("Error: {:?}", err);
-                }
-            },
-        );
-    }
+
     pub(crate) fn get_path_from_signalk(&self, path: String) -> Result<Option<f64>, SignalKError> {
         return if let Some(ref storage) = self.signalk_data {
             // storage.get_f64_for_path(path)

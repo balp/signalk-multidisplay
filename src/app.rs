@@ -1,3 +1,4 @@
+use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use crate::communication::SignalKCommunicator;
 use crate::layouts::Layout;
 use eframe::egui;
@@ -12,15 +13,21 @@ pub struct TemplateApp {
     communicator: Option<SignalKCommunicator>,
     #[serde(skip)]
     layout: crate::layouts::SingleValueLayout,
+    #[serde(skip)]
+    server_changed_tx: Option<Sender<String>>,
+    #[serde(skip)]
+    server_changed_rx: Option<Receiver<String>>,
 }
 
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
-            server: "http://192.168.1.22:3000/signalk".to_owned(),
+            server: "https://demo.signalk.org/signalk".to_owned(),
             view_config: false,
             communicator: None,
             layout: crate::layouts::SingleValueLayout::default(),
+            server_changed_tx: None,
+            server_changed_rx: None,
         }
     }
 }
@@ -39,8 +46,15 @@ impl TemplateApp {
         };
         let mut communicator = SignalKCommunicator::default();
         communicator.set_up_server_connections(app.server.to_string());
+        let (server_changed_tx, server_changed_rx): (Sender<String>, Receiver<String>) = channel();
+        app.server_changed_tx = Some(server_changed_tx);
+        app.server_changed_rx = Some(server_changed_rx);
+
         app.communicator = Some(communicator);
         app
+    }
+    pub fn server_changed(&mut self) {
+       log::warn!("Server changed to {} IGNORED!!!", self.server);
     }
 }
 
@@ -52,15 +66,30 @@ impl eframe::App for TemplateApp {
         if let Some(ref mut sk_com) = self.communicator {
             sk_com.handle_data(ctx);
         }
+        if let Some(ref mut server_changed_rx) = self.server_changed_rx {
+            match server_changed_rx.try_recv() {
+                Ok(_) => {
+                    if let Some(ref mut communicator) = self.communicator {
+                        communicator.disconnect_server();
+                        communicator.set_up_server_connections(self.server.to_string());
+                    } else {
+                        let mut communicator = SignalKCommunicator::default();
+                        communicator.set_up_server_connections(self.server.to_string());
+                        self.communicator = Some(communicator);
+                    }
+                }
+                Err(_) => {}
+            }
+        }
 
         let Self {
             server,
             view_config,
             layout,
+            server_changed_tx,
             ..
         } = self;
 
-        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
@@ -68,6 +97,7 @@ impl eframe::App for TemplateApp {
                     if ui.button("Config").clicked() {
                         *view_config = !*view_config;
                     }
+                    #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                     if ui.button("Quit").clicked() {
                         _frame.close();
                     }
@@ -82,7 +112,14 @@ impl eframe::App for TemplateApp {
 
                 ui.vertical(|ui| {
                     ui.label("Server Address: ");
-                    ui.text_edit_singleline(server);
+                    let response = ui.text_edit_singleline(server);
+                    if response.lost_focus() {
+                        if let Some(tx_channel) = server_changed_tx {
+                            if let Err(err) =  tx_channel.send(server.to_string()) {
+                                log::error!("Can't send server changed message {:?}", err);
+                            };
+                        }
+                    }
                 });
 
                 ui.add_space(6.);
