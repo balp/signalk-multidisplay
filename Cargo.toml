@@ -7,7 +7,8 @@ authors = ["Anders Arnholm <anders@arnholm.se>"]
 license = "ISC"
 description = "A display instrument for SignalK (Sailing) data"
 readme = "README.md"
-homepage = ""
+homepage = "https://balp.github.io/signalk-multidisplay/"
+repository = "https://github.com/balp/signalk-multidisplay"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #[lib]
 #crate-type = ["cdylib", "rlib"]
