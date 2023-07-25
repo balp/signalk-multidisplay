@@ -3,7 +3,6 @@ use crate::datatypes::{CourseOverGround, DataValues, SpeedOverGround, SpeedThrou
 use eframe::egui;
 use egui::{RichText, Ui, Vec2};
 
-
 // Layout variants
 // - Single Value
 // - Dual Value

@@ -221,6 +221,6 @@ impl SignalKCommunicator {
             storage.get_f64_for_path(path)
         } else {
             Err(signalk::SignalKGetError::ValueNotSet)
-        }
+        };
     }
 }

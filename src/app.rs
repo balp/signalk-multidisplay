@@ -1,8 +1,8 @@
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use crate::communication::SignalKCommunicator;
 use crate::layouts::Layout;
 use eframe::egui;
 use log::debug;
+use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -54,7 +54,7 @@ impl TemplateApp {
         app
     }
     pub fn server_changed(&mut self) {
-       log::warn!("Server changed to {} IGNORED!!!", self.server);
+        log::warn!("Server changed to {} IGNORED!!!", self.server);
     }
 }
 
@@ -115,7 +115,7 @@ impl eframe::App for TemplateApp {
                     let response = ui.text_edit_singleline(server);
                     if response.lost_focus() {
                         if let Some(tx_channel) = server_changed_tx {
-                            if let Err(err) =  tx_channel.send(server.to_string()) {
+                            if let Err(err) = tx_channel.send(server.to_string()) {
                                 log::error!("Can't send server changed message {:?}", err);
                             };
                         }

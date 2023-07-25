@@ -16,18 +16,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1 # get rust toolchain for wasm
+      - name: Get rust tool chain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
           components: rustfmt, clippy
       - name: Rust Cache # cache the rust build artefacts
         uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
+      - name: cargo build release
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --all-features
-      - uses: actions-rs/cargo@v1
+      - name: cargo test all
+        uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all-targets
+      - name: cargo clippy warning
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --no-deps
+      - name: cargo fmt check
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check

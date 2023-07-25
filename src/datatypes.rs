@@ -268,10 +268,10 @@ pub struct CourseOverGround {
 
 impl CourseOverGround {
     pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let mut cog = communicator.get_f64_for_path("self.navigation.courseOverGroundMagnetic".to_string());
+        let mut cog =
+            communicator.get_f64_for_path("self.navigation.courseOverGroundMagnetic".to_string());
         if let Err(_) = cog {
             cog = communicator.get_f64_for_path("self.navigation.courseOverGroundTrue".to_string());
-
         }
         self.display_unit.format(cog)
     }
