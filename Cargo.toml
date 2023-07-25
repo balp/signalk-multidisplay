@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.65"
 authors = ["Anders Arnholm <anders@arnholm.se>"]
-
+license = "ISC"
+description = "A display instrument for SignalK (Sailing) data"
+readme = "README.md"
+homepage = ""
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 #[lib]
 #crate-type = ["cdylib", "rlib"]
@@ -12,7 +15,7 @@ authors = ["Anders Arnholm <anders@arnholm.se>"]
 
 [dependencies]
 log = "0.4"
-signalk = "0.3"
+signalk = "0.3.1"
 egui = "0.22"
 eframe = { version = "0.22", default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
@@ -42,4 +45,4 @@ opt-level = 2
 opt-level = 3
 
 [patch.crates-io]
-#signalk = { path = "../signalk" }
+# signalk = { path = "../signalk" }

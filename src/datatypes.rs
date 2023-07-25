@@ -129,27 +129,24 @@ impl SpeedUnit {
                 );
             });
     }
-    fn format(&self, value: Result<Option<f64>, SignalKError>) -> String {
+    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
         match value {
-            Ok(val) => match val {
-                None => "  -.-".to_owned(),
-                Some(value) => match self {
-                    SpeedUnit::MeterPerSecond => {
-                        format!("{:5.2}", value)
-                    }
-                    SpeedUnit::Knot => {
-                        let display_value = value * 3600. / 1851.85;
-                        format!("{:5.1}", display_value)
-                    }
-                    SpeedUnit::MilesPerHour => {
-                        let display_value = value * 3600. / 1609.344;
-                        format!("{:5.1}", display_value)
-                    }
-                    SpeedUnit::KilometerPerHour => {
-                        let display_value = value * 3.600;
-                        format!("{:5.2}", display_value)
-                    }
-                },
+            Ok(val) => match self {
+                SpeedUnit::MeterPerSecond => {
+                    format!("{:5.2}", val)
+                }
+                SpeedUnit::Knot => {
+                    let display_value = val * 3600. / 1851.85;
+                    format!("{:5.1}", display_value)
+                }
+                SpeedUnit::MilesPerHour => {
+                    let display_value = val * 3600. / 1609.344;
+                    format!("{:5.1}", display_value)
+                }
+                SpeedUnit::KilometerPerHour => {
+                    let display_value = val * 3.600;
+                    format!("{:5.2}", display_value)
+                }
             },
             Err(_) => "-----".to_owned(),
         }
@@ -190,19 +187,16 @@ impl AngularUnit {
             });
     }
 
-    fn format(&self, value: Result<Option<f64>, SignalKError>) -> String {
+    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
         match value {
-            Ok(val) => match val {
-                None => "  -.-".to_owned(),
-                Some(value) => match self {
-                    AngularUnit::Radians => {
-                        format!("{:5.3}", value)
-                    }
-                    AngularUnit::Degrees => {
-                        let display_value = value * 180. / std::f64::consts::PI;
-                        format!("{:5.1}", display_value)
-                    }
-                },
+            Ok(val) => match self {
+                AngularUnit::Radians => {
+                    format!("{:5.3}", val)
+                }
+                AngularUnit::Degrees => {
+                    let display_value = val * 180. / std::f64::consts::PI;
+                    format!("{:5.1}", display_value)
+                }
             },
             Err(_) => "-----".to_owned(),
         }
@@ -218,7 +212,7 @@ pub struct SpeedThroughWater {
 
 impl SpeedThroughWater {
     pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let stw = communicator.get_stw_from_signalk();
+        let stw = communicator.get_f64_for_path("self.navigation.speedThroughWater".to_string());
         self.display_unit.format(stw)
     }
 
@@ -246,7 +240,7 @@ pub struct SpeedOverGround {
 
 impl SpeedOverGround {
     pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let sog = communicator.get_sog_from_signalk();
+        let sog = communicator.get_f64_for_path("self.navigation.speedOverGround".to_string());
         self.display_unit.format(sog)
     }
 
@@ -274,8 +268,12 @@ pub struct CourseOverGround {
 
 impl CourseOverGround {
     pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let stw = communicator.get_cog_from_signalk();
-        self.display_unit.format(stw)
+        let mut cog = communicator.get_f64_for_path("self.navigation.courseOverGroundMagnetic".to_string());
+        if let Err(_) = cog {
+            cog = communicator.get_f64_for_path("self.navigation.courseOverGroundTrue".to_string());
+
+        }
+        self.display_unit.format(cog)
     }
     pub(crate) fn add_config(&mut self, ui: &mut Ui) {
         self.display_unit.add_config(ui);

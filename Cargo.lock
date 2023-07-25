@@ -2274,9 +2274,9 @@ dependencies = [
 
 [[package]]
 name = "signalk"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0a5f36a0d0fc1196c7b0efeee1bf6107f41552c49918371b610726e02e42de6"
+checksum = "205f2fe91258dbb940b5adb068d39055ce65c1c7aa83e6cde433d8d224663edf"
 dependencies = [
  "bytes",
  "derive_more",

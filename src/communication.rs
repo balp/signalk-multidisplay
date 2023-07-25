@@ -216,72 +216,11 @@ impl SignalKCommunicator {
         );
     }
 
-
-    pub(crate) fn get_path_from_signalk(&self, path: String) -> Result<Option<f64>, SignalKError> {
+    pub(crate) fn get_f64_for_path(&self, path: String) -> Result<f64, signalk::SignalKGetError> {
         return if let Some(ref storage) = self.signalk_data {
-            // storage.get_f64_for_path(path)
-            Err(SignalKError::Oops)
+            storage.get_f64_for_path(path)
         } else {
-            Err(SignalKError::Oops)
+            Err(signalk::SignalKGetError::ValueNotSet)
         }
-    }
-    pub(crate) fn get_stw_from_signalk(&self) -> Result<Option<f64>, SignalKError> {
-        return if let Some(ref storage) = self.signalk_data {
-            if let Some(_self_vessel) = storage.get().get_self() {
-                if let Some(ref navigation) = _self_vessel.navigation {
-                    if let Some(ref stw_number) = navigation.speed_through_water {
-                        Ok(stw_number.value)
-                    } else {
-                        Ok(None)
-                    }
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Err(SignalKError::Oops)
-            }
-        } else {
-            Err(SignalKError::Oops)
-        };
-    }
-
-    pub(crate) fn get_sog_from_signalk(&self) -> Result<Option<f64>, SignalKError> {
-        return if let Some(ref storage) = self.signalk_data {
-            if let Some(_self_vessel) = storage.get().get_self() {
-                if let Some(ref navigation) = _self_vessel.navigation {
-                    if let Some(ref stw_number) = navigation.speed_over_ground {
-                        Ok(stw_number.value)
-                    } else {
-                        Ok(None)
-                    }
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Err(SignalKError::Oops)
-            }
-        } else {
-            Err(SignalKError::Oops)
-        };
-    }
-
-    pub(crate) fn get_cog_from_signalk(&self) -> Result<Option<f64>, SignalKError> {
-        return if let Some(ref storage) = self.signalk_data {
-            if let Some(_self_vessel) = storage.get().get_self() {
-                if let Some(ref navigation) = _self_vessel.navigation {
-                    if let Some(ref stw_number) = navigation.course_over_ground_magnetic {
-                        Ok(stw_number.value)
-                    } else {
-                        Ok(None)
-                    }
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Err(SignalKError::Oops)
-            }
-        } else {
-            Err(SignalKError::Oops)
-        };
     }
 }
