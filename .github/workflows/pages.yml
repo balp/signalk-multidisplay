@@ -36,7 +36,7 @@ jobs:
         # relatively as eframe_template/favicon.ico. if we skip public-url option, the href paths will instead request username.github.io/favicon.ico which
         # will obviously return error 404 not found.
         run: |
-          ./trunk build --release --public-url "${GITHUB_REPOSITORY#*/demo/}"
+          ./trunk build --release --public-url "${GITHUB_REPOSITORY#*/}/demo/"
           find dist
           mkdir -p home_page/demo/
           cp -r dist/* home_page/demo/
