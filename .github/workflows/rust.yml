@@ -16,10 +16,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev
-          sudo apt-get install libwayland-dev libxkbcommon-dev
-      - name: Build
-        run: |
-          cargo build --verbose
+      - uses: actions-rs/toolchain@v1 # get rust toolchain for wasm
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - name: Rust Cache # cache the rust build artefacts
+        uses: Swatinem/rust-cache@v2
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all-features
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-targets
