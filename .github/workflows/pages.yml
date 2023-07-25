@@ -39,7 +39,7 @@ jobs:
           ./trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
           find dist
           mkdir -p home_page/demo/
-          cp -r dist/ home_page/demo/
+          cp -r dist/* home_page/demo/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
