@@ -21,7 +21,6 @@ jobs:
         with:
           toolchain: stable
           targets: arm-unknown-linux-gnueabihf
-          components: cross
       - name: Rust Cache # cache the rust build artefacts
         uses: Swatinem/rust-cache@v2
       - name: cargo build release
