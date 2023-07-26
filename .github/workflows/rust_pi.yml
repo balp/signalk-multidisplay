@@ -28,4 +28,6 @@ jobs:
       - name: Rust Cache # cache the rust build artefacts
         uses: Swatinem/rust-cache@v2
       - name: cargo build release
+        env:
+          CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER: "/usr/bin/arm-linux-gnueabihf-gcc"
         run: cargo build --release --all-features --target arm-unknown-linux-gnueabihf
