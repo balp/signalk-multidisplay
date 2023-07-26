@@ -16,7 +16,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: carlosperate/arm-none-eabi-gcc-action@v1
+      - name: Install arm toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-arm-linux-gnueabihf
       - name: Get rust tool chain
         uses: dtolnay/rust-toolchain@stable
         with:
