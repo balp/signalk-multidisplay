@@ -94,9 +94,10 @@ impl eframe::App for TemplateApp {
                     if ui.button("Config").clicked() {
                         *view_config = !*view_config;
                     }
-                    #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-                    if ui.button("Quit").clicked() {
-                        frame.close();
+                    if !frame.is_web() {
+                        if ui.button("Quit").clicked() {
+                            frame.close();
+                        }
                     }
                 });
                 if !frame.is_web() {
@@ -135,7 +136,6 @@ impl eframe::App for TemplateApp {
             });
         }
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("SignalK Multidisplay");
             if let Some(ref comm) = self.communicator {
                 layout.draw_ui(ui, comm);
             }
