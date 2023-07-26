@@ -94,10 +94,9 @@ impl eframe::App for TemplateApp {
                     if ui.button("Config").clicked() {
                         *view_config = !*view_config;
                     }
-                    if !frame.is_web() {
-                        if ui.button("Quit").clicked() {
-                            frame.close();
-                        }
+                    #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
+                    if ui.button("Quit").clicked() {
+                        frame.close();
                     }
                 });
                 if !frame.is_web() {
