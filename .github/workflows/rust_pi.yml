@@ -30,4 +30,4 @@ jobs:
       - name: cargo build release
         env:
           CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER: "/usr/bin/arm-linux-gnueabihf-gcc"
-        run: cargo build --release --all-features --target arm-unknown-linux-gnueabihf --config target.arm-unknown-linux-gnueabihf.linker="arm-linux-gnueabihf-gcc"
+        run: cargo build --release --all-features --target arm-unknown-linux-gnueabihf --config target.arm-unknown-linux-gnueabihf.linker=\"arm-linux-gnueabihf-gcc\"
