@@ -5,4 +5,4 @@ mod communication;
 mod datatypes;
 mod layouts;
 
-pub use app::TemplateApp;
+pub use app::DisplayApplication;

@@ -3,18 +3,46 @@ use crate::datatypes::{CourseOverGround, DataValues, SpeedOverGround, SpeedThrou
 use eframe::egui;
 use egui::{RichText, Ui};
 
-// Layout variants
-// - Single Value
-// - Dual Value
-// - Triple Value
-// - Four values
+/// The different types of layout that a page can have.
+pub enum Layout {
+    SingleValue(SingleValueLayout),
+    DualValues,
+    TripleValues,
+    FourValues,
+}
 
-pub trait Layout {
+impl LayoutComponent for Layout {
+    fn add_config(&mut self, ui: &mut Ui) {
+        if let Self::SingleValue(layout) = self {
+            layout.add_config(ui);
+        }
+    }
+
+    fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {
+        if let Self::SingleValue(layout) = self {
+            layout.draw_ui(ui, communicator);
+        }
+    }
+}
+
+/// Items that can be displayed in the UI
+pub trait LayoutComponent {
+    /// This will draw the needed configuration parts for the component
+    fn add_config(&mut self, ui: &mut Ui);
+
+    /// This will draw the main ui of the component
     fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator);
 }
 
+/// This is a component that can show a single value on the screen.
 pub struct SingleValueLayout {
     value: DataValues,
+}
+
+impl SingleValueLayout {
+    pub fn new(value: DataValues) -> Self {
+        Self { value }
+    }
 }
 
 impl Default for SingleValueLayout {
@@ -25,8 +53,8 @@ impl Default for SingleValueLayout {
     }
 }
 
-impl SingleValueLayout {
-    pub(crate) fn add_config(&mut self, ui: &mut Ui) {
+impl LayoutComponent for SingleValueLayout {
+    fn add_config(&mut self, ui: &mut Ui) {
         let Self { value } = self;
         ui.label("Data to display");
         egui::ComboBox::from_label("Display Value")
@@ -52,9 +80,7 @@ impl SingleValueLayout {
             });
         value.add_config(ui);
     }
-}
 
-impl Layout for SingleValueLayout {
     fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {
         const SIZE_OF_MAIN_TEXT: f32 = 150.0;
         const SIZE_OF_ABBREVIATION: f32 = 25.0;

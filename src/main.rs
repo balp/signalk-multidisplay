@@ -21,7 +21,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "SingalK Multidisplay",
         native_options,
-        Box::new(|cc| Box::new(signalk_multidisplay::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(signalk_multidisplay::DisplayApplication::new(cc))),
     )
 }
 
@@ -38,7 +38,7 @@ fn main() {
             .start(
                 "the_canvas_id", // hardcode it
                 web_options,
-                Box::new(|cc| Box::new(signalk_multidisplay::TemplateApp::new(cc))),
+                Box::new(|cc| Box::new(signalk_multidisplay::DisplayApplication::new(cc))),
             )
             .await
             .expect("failed to start eframe");

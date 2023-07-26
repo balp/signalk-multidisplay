@@ -1,47 +1,69 @@
 use crate::communication::SignalKCommunicator;
-use crate::layouts::Layout;
+use crate::layouts::LayoutComponent;
 use eframe::egui;
-use log::debug;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::time::{Duration, Instant};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
-pub struct TemplateApp {
+pub struct DisplayApplication {
     server: String,
     view_config: bool,
     #[serde(skip)]
     communicator: Option<SignalKCommunicator>,
     #[serde(skip)]
-    layout: crate::layouts::SingleValueLayout,
+    layouts: Vec<crate::layouts::Layout>,
+    #[serde(skip)]
+    current_layout: usize,
+    #[serde(skip)]
+    last_layout_change: Instant,
     #[serde(skip)]
     server_changed_tx: Option<Sender<String>>,
     #[serde(skip)]
     server_changed_rx: Option<Receiver<String>>,
 }
 
-impl Default for TemplateApp {
+impl Default for DisplayApplication {
     fn default() -> Self {
         Self {
             server: "https://demo.signalk.org/signalk".to_owned(),
             view_config: false,
             communicator: None,
-            layout: crate::layouts::SingleValueLayout::default(),
+            layouts: vec![
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    crate::datatypes::DataValues::SpeedThroughWater(
+                        crate::datatypes::SpeedThroughWater::default(),
+                    ),
+                )),
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    crate::datatypes::DataValues::SpeedOverGround(
+                        crate::datatypes::SpeedOverGround::default(),
+                    ),
+                )),
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    crate::datatypes::DataValues::CourseOverGround(
+                        crate::datatypes::CourseOverGround::default(),
+                    ),
+                )),
+            ],
+            current_layout: 0,
+            last_layout_change: Instant::now(),
             server_changed_tx: None,
             server_changed_rx: None,
         }
     }
 }
 
-impl TemplateApp {
+impl DisplayApplication {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = if let Some(storage) = cc.storage {
-            let restored_app: TemplateApp =
+            let restored_app: DisplayApplication =
                 eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
-            debug!("Restore object with server {}", restored_app.server);
+            log::debug!("Restore object with server {}", restored_app.server);
             restored_app
         } else {
-            debug!("Creating new instance.");
+            log::debug!("Creating new instance.");
             Self::default()
         };
         let mut communicator = SignalKCommunicator::default();
@@ -58,15 +80,18 @@ impl TemplateApp {
     }
 }
 
-impl eframe::App for TemplateApp {
+impl eframe::App for DisplayApplication {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        log::debug!("TemplateApp::update() - Enter");
         ctx.request_repaint();
         if let Some(ref mut sk_com) = self.communicator {
+            log::debug!("Handle sk_com.handle_data()");
             sk_com.handle_data(ctx);
         }
         if let Some(ref mut server_changed_rx) = self.server_changed_rx {
+            log::debug!("Server changed..");
             if server_changed_rx.try_recv().is_ok() {
                 if let Some(ref mut communicator) = self.communicator {
                     communicator.disconnect_server();
@@ -78,15 +103,24 @@ impl eframe::App for TemplateApp {
                 }
             }
         }
+        log::debug!("Draw UI..");
 
         let Self {
             server,
             view_config,
-            layout,
+            layouts,
+            current_layout,
             server_changed_tx,
+            last_layout_change,
             ..
         } = self;
 
+        if last_layout_change.elapsed() > Duration::from_secs(3) {
+            log::info!("Update current layout {}", *current_layout);
+            *last_layout_change = Instant::now();
+            *current_layout = (*current_layout + 1) % layouts.len();
+            log::info!("New current layout {}", *current_layout);
+        }
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
@@ -125,7 +159,7 @@ impl eframe::App for TemplateApp {
                 });
 
                 ui.add_space(6.);
-                layout.add_config(ui);
+                layouts[*current_layout].add_config(ui);
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                     ui.horizontal(|ui| {
@@ -136,9 +170,10 @@ impl eframe::App for TemplateApp {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(ref comm) = self.communicator {
-                layout.draw_ui(ui, comm);
+                layouts[*current_layout].draw_ui(ui, comm);
             }
         });
+        log::debug!("TemplateApp::update() - Exit");
     }
 
     /// Called by the frame work to save state before shutdown.
