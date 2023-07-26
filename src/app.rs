@@ -31,16 +31,19 @@ impl Default for DisplayApplication {
             communicator: None,
             layouts: vec![
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    0,
                     crate::datatypes::DataValues::SpeedThroughWater(
                         crate::datatypes::SpeedThroughWater::default(),
                     ),
                 )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    1,
                     crate::datatypes::DataValues::SpeedOverGround(
                         crate::datatypes::SpeedOverGround::default(),
                     ),
                 )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    2,
                     crate::datatypes::DataValues::CourseOverGround(
                         crate::datatypes::CourseOverGround::default(),
                     ),
@@ -159,7 +162,12 @@ impl eframe::App for DisplayApplication {
                 });
 
                 ui.add_space(6.);
-                layouts[*current_layout].add_config(ui);
+
+                for layout in layouts.iter_mut() {
+                    ui.group(|ui| {
+                        layout.add_config(ui);
+                    });
+                }
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                     ui.horizontal(|ui| {
@@ -170,7 +178,7 @@ impl eframe::App for DisplayApplication {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(ref comm) = self.communicator {
-                layouts[*current_layout].draw_ui(ui, comm);
+                &layouts[*current_layout].draw_ui(ui, comm);
             }
         });
         log::debug!("TemplateApp::update() - Exit");

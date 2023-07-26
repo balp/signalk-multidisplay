@@ -36,18 +36,20 @@ pub trait LayoutComponent {
 
 /// This is a component that can show a single value on the screen.
 pub struct SingleValueLayout {
+    id: usize,
     value: DataValues,
 }
 
 impl SingleValueLayout {
-    pub fn new(value: DataValues) -> Self {
-        Self { value }
+    pub fn new(id: usize, value: DataValues) -> Self {
+        Self { id, value }
     }
 }
 
 impl Default for SingleValueLayout {
     fn default() -> Self {
         Self {
+            id: 0,
             value: DataValues::CourseOverGround(CourseOverGround::default()),
         }
     }
@@ -55,9 +57,9 @@ impl Default for SingleValueLayout {
 
 impl LayoutComponent for SingleValueLayout {
     fn add_config(&mut self, ui: &mut Ui) {
-        let Self { value } = self;
-        ui.label("Data to display");
-        egui::ComboBox::from_label("Display Value")
+        let Self { id, value } = self;
+        ui.label("Single Value Layout");
+        egui::ComboBox::new(format!("SingleValueLayout: {}", id), "Value")
             .selected_text(value.abbreviation())
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
@@ -78,7 +80,7 @@ impl LayoutComponent for SingleValueLayout {
                     "STW",
                 );
             });
-        value.add_config(ui);
+        value.add_config(*id, ui);
     }
 
     fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {

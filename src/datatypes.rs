@@ -54,11 +54,11 @@ impl DataValues {
         }
     }
 
-    pub fn add_config(&mut self, ui: &mut Ui) {
+    pub fn add_config(&mut self, index: usize, ui: &mut Ui) {
         match self {
-            DataValues::SpeedThroughWater(layout) => layout.add_config(ui),
-            DataValues::SpeedOverGround(layout) => layout.add_config(ui),
-            DataValues::CourseOverGround(layout) => layout.add_config(ui),
+            DataValues::SpeedThroughWater(layout) => layout.add_config(index, ui),
+            DataValues::SpeedOverGround(layout) => layout.add_config(index, ui),
+            DataValues::CourseOverGround(layout) => layout.add_config(index, ui),
         }
     }
 
@@ -104,9 +104,8 @@ impl SpeedUnit {
             SpeedUnit::KilometerPerHour => "km/h".to_string(),
         }
     }
-    fn add_config(&mut self, ui: &mut Ui) {
-        ui.label("Unit of data");
-        egui::ComboBox::from_label("Data type")
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        egui::ComboBox::new(format!("data_type_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
@@ -167,9 +166,8 @@ impl AngularUnit {
         }
     }
 
-    fn add_config(&mut self, ui: &mut Ui) {
-        ui.label("Unit of data");
-        egui::ComboBox::from_label("Data type")
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        egui::ComboBox::new(format!("angular_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
@@ -216,8 +214,8 @@ impl SpeedThroughWater {
         self.display_unit.format(stw)
     }
 
-    pub(crate) fn add_config(&mut self, ui: &mut Ui) {
-        self.display_unit.add_config(ui);
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
     }
 }
 
@@ -244,8 +242,8 @@ impl SpeedOverGround {
         self.display_unit.format(sog)
     }
 
-    pub(crate) fn add_config(&mut self, ui: &mut Ui) {
-        self.display_unit.add_config(ui);
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
     }
 }
 
@@ -275,8 +273,8 @@ impl CourseOverGround {
         }
         self.display_unit.format(cog)
     }
-    pub(crate) fn add_config(&mut self, ui: &mut Ui) {
-        self.display_unit.add_config(ui);
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
     }
 }
 
