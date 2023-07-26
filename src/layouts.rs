@@ -56,24 +56,33 @@ impl SingleValueLayout {
 
 impl Layout for SingleValueLayout {
     fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {
+        const SIZE_OF_MAIN_TEXT: f32 = 150.0;
+        const SIZE_OF_ABBREVIATION: f32 = 25.0;
+        const SIZE_OF_UNIT: f32 = 50.0;
+        const SIZE_OF_FULL_NAME: f32 = 75.0;
         ui.group(|ui| {
             ui.spacing_mut().item_spacing.x = 0.0;
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
                     let current_stw = self.value.formatted_value(communicator);
-                    ui.label(RichText::new(current_stw).size(300.0).monospace());
+                    ui.label(
+                        RichText::new(current_stw)
+                            .size(SIZE_OF_MAIN_TEXT)
+                            .monospace(),
+                    );
                     ui.horizontal(|ui| {
                         ui.vertical_centered(|ui| {
-                            ui.label(RichText::new(self.value.abbreviation()).size(50.0));
-                            ui.label(RichText::new(self.value.unit_name()).size(100.0));
+                            ui.label(
+                                RichText::new(self.value.abbreviation()).size(SIZE_OF_ABBREVIATION),
+                            );
+                            ui.label(RichText::new(self.value.unit_name()).size(SIZE_OF_UNIT));
                         });
                     });
                 });
                 ui.vertical_centered(|ui| {
-                    ui.label(RichText::new(self.value.name()).size(150.0));
+                    ui.label(RichText::new(self.value.name()).size(SIZE_OF_FULL_NAME));
                 });
             });
-            ui.set_min_size(Vec2::new(300.0, 150.0));
         });
     }
 }

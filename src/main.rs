@@ -11,6 +11,8 @@ async fn main() -> eframe::Result<()> {
 
     let mut native_options = eframe::NativeOptions::default();
     native_options.initial_window_size = Some(Vec2::new(800., 480.));
+    // native_options.max_window_size = Some(Vec2::new(800., 480.));
+    // native_options.min_window_size = Some(Vec2::new(800., 480.));
     native_options.maximized = true;
     native_options.fullscreen = true;
 

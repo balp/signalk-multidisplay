@@ -61,7 +61,7 @@ impl TemplateApp {
 impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         ctx.request_repaint();
         if let Some(ref mut sk_com) = self.communicator {
             sk_com.handle_data(ctx);
@@ -99,9 +99,14 @@ impl eframe::App for TemplateApp {
                     }
                     #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                     if ui.button("Quit").clicked() {
-                        _frame.close();
+                        frame.close();
                     }
                 });
+                if !frame.is_web() {
+                    ui.menu_button("View", |ui| {
+                        egui::gui_zoom::zoom_menu_buttons(ui, frame.info().native_pixels_per_point);
+                    });
+                }
             });
         });
 
