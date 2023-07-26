@@ -1,6 +1,6 @@
 [package]
 name = "signalk-multidisplay"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.65"
 authors = ["Anders Arnholm <anders@arnholm.se>"]
@@ -45,10 +45,10 @@ wasm-bindgen-futures = "0.4"
 
 [profile.dev]
 opt-level = 1
-[profile.release]
-opt-level = 2
 [profile.dev.package."*"]
 opt-level = 3
+[profile.release]
+opt-level = 2
 
 [patch.crates-io]
 # signalk = { path = "../signalk" }
