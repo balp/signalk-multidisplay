@@ -1,4 +1,4 @@
-name: Rust build
+name: Build for Raspberry
 
 on:
   push:
@@ -20,14 +20,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          components: rustfmt, clippy
+          targets: arm-unknown-linux-gnueabihf
+          components: cross
       - name: Rust Cache # cache the rust build artefacts
         uses: Swatinem/rust-cache@v2
       - name: cargo build release
-        run: cargo build --release --all-features
-      - name: cargo test all
-        run: cargo test --all-targets --all-features
-      - name: cargo clippy warning
-        run: cargo clippy --no-deps
-      - name: cargo fmt check
-        run: cargo fmt --check
+        run: cargo build --release --all-features --target arm-unknown-linux-gnueabihf

@@ -1,4 +1,4 @@
-use crate::communication::{SignalKCommunicator, SignalKError};
+use crate::communication::SignalKCommunicator;
 use egui::Ui;
 
 // Garmins data displays:
@@ -40,49 +40,49 @@ use egui::Ui;
 
 #[derive(Debug, PartialEq)]
 pub enum DataValues {
-    ValueSpeedThroughWater(SpeedThroughWater),
-    ValueSpeedOverGround(SpeedOverGround),
-    ValueCourseOverGround(CourseOverGround),
+    SpeedThroughWater(SpeedThroughWater),
+    SpeedOverGround(SpeedOverGround),
+    CourseOverGround(CourseOverGround),
 }
 
 impl DataValues {
     pub fn abbreviation(&self) -> String {
         match self {
-            DataValues::ValueSpeedThroughWater(value) => value.abbreviation.to_string(),
-            DataValues::ValueSpeedOverGround(value) => value.abbreviation.to_string(),
-            DataValues::ValueCourseOverGround(value) => value.abbreviation.to_string(),
+            DataValues::SpeedThroughWater(value) => value.abbreviation.to_string(),
+            DataValues::SpeedOverGround(value) => value.abbreviation.to_string(),
+            DataValues::CourseOverGround(value) => value.abbreviation.to_string(),
         }
     }
 
     pub fn add_config(&mut self, ui: &mut Ui) {
         match self {
-            DataValues::ValueSpeedThroughWater(layout) => layout.add_config(ui),
-            DataValues::ValueSpeedOverGround(layout) => layout.add_config(ui),
-            DataValues::ValueCourseOverGround(layout) => layout.add_config(ui),
+            DataValues::SpeedThroughWater(layout) => layout.add_config(ui),
+            DataValues::SpeedOverGround(layout) => layout.add_config(ui),
+            DataValues::CourseOverGround(layout) => layout.add_config(ui),
         }
     }
 
     pub fn formatted_value(&self, communicator: &SignalKCommunicator) -> String {
         match &self {
-            DataValues::ValueSpeedThroughWater(value) => value.fmt_value(communicator),
-            DataValues::ValueSpeedOverGround(value) => value.fmt_value(communicator),
-            DataValues::ValueCourseOverGround(value) => value.fmt_value(communicator),
+            DataValues::SpeedThroughWater(value) => value.fmt_value(communicator),
+            DataValues::SpeedOverGround(value) => value.fmt_value(communicator),
+            DataValues::CourseOverGround(value) => value.fmt_value(communicator),
         }
     }
 
     pub fn name(&self) -> String {
         match &self {
-            DataValues::ValueSpeedThroughWater(value) => value.name.to_string(),
-            DataValues::ValueSpeedOverGround(value) => value.name.to_string(),
-            DataValues::ValueCourseOverGround(value) => value.name.to_string(),
+            DataValues::SpeedThroughWater(value) => value.name.to_string(),
+            DataValues::SpeedOverGround(value) => value.name.to_string(),
+            DataValues::CourseOverGround(value) => value.name.to_string(),
         }
     }
 
     pub fn unit_name(&self) -> String {
         match &self {
-            DataValues::ValueSpeedThroughWater(value) => value.display_unit.abbreviation(),
-            DataValues::ValueSpeedOverGround(value) => value.display_unit.abbreviation(),
-            DataValues::ValueCourseOverGround(value) => value.display_unit.abbreviation(),
+            DataValues::SpeedThroughWater(value) => value.display_unit.abbreviation(),
+            DataValues::SpeedOverGround(value) => value.display_unit.abbreviation(),
+            DataValues::CourseOverGround(value) => value.display_unit.abbreviation(),
         }
     }
 }
@@ -270,7 +270,7 @@ impl CourseOverGround {
     pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
         let mut cog =
             communicator.get_f64_for_path("self.navigation.courseOverGroundMagnetic".to_string());
-        if let Err(_) = cog {
+        if cog.is_err() {
             cog = communicator.get_f64_for_path("self.navigation.courseOverGroundTrue".to_string());
         }
         self.display_unit.format(cog)

@@ -2,7 +2,7 @@ use crate::communication::SignalKCommunicator;
 use crate::layouts::Layout;
 use eframe::egui;
 use log::debug;
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -67,18 +67,15 @@ impl eframe::App for TemplateApp {
             sk_com.handle_data(ctx);
         }
         if let Some(ref mut server_changed_rx) = self.server_changed_rx {
-            match server_changed_rx.try_recv() {
-                Ok(_) => {
-                    if let Some(ref mut communicator) = self.communicator {
-                        communicator.disconnect_server();
-                        communicator.set_up_server_connections(self.server.to_string());
-                    } else {
-                        let mut communicator = SignalKCommunicator::default();
-                        communicator.set_up_server_connections(self.server.to_string());
-                        self.communicator = Some(communicator);
-                    }
+            if server_changed_rx.try_recv().is_ok() {
+                if let Some(ref mut communicator) = self.communicator {
+                    communicator.disconnect_server();
+                    communicator.set_up_server_connections(self.server.to_string());
+                } else {
+                    let mut communicator = SignalKCommunicator::default();
+                    communicator.set_up_server_connections(self.server.to_string());
+                    self.communicator = Some(communicator);
                 }
-                Err(_) => {}
             }
         }
 

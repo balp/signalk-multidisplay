@@ -14,10 +14,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v3
       - name: Get rust tool chain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          override: true
       - name: Rust Cache # cache the rust build artefacts
         uses: Swatinem/rust-cache@v2
       - name: Publish to creates

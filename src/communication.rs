@@ -1,16 +1,10 @@
 use egui::Context;
-use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
+use ewebsock::{WsEvent, WsMessage, WsReceiver};
 use log::{debug, error, info};
 use signalk::{Storage, V1DeltaFormat, V1Discovery, V1FullFormat};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-#[derive(Debug)]
-pub enum SignalKError {
-    Oops,
-}
-
 pub struct WebsocketHandler {
-    ws_sender: WsSender,
     ws_receiver: WsReceiver,
 }
 
@@ -121,12 +115,9 @@ impl SignalKCommunicator {
 
     fn handle_full_message(&mut self, ctx: &Context) {
         if let Some(ref mut full_rx_channel) = self.full_rx {
-            match full_rx_channel.try_recv() {
-                Ok(full) => {
-                    ctx.request_repaint();
-                    self.signalk_data = Some(Storage::new(full));
-                }
-                Err(_) => {}
+            if let Ok(full) = full_rx_channel.try_recv() {
+                ctx.request_repaint();
+                self.signalk_data = Some(Storage::new(full));
             }
         }
     }
@@ -175,12 +166,9 @@ impl SignalKCommunicator {
         info!("Connect to websocket url: {}", ws_url);
         let wakeup = move || ctx_clone.request_repaint();
         match ewebsock::connect_with_wakeup(&ws_url, wakeup) {
-            Ok((ws_sender, ws_receiver)) => {
+            Ok((_ws_sender, ws_receiver)) => {
                 debug!("Websocket connected ok!");
-                self.ws_handler = Some(WebsocketHandler {
-                    ws_sender,
-                    ws_receiver,
-                });
+                self.ws_handler = Some(WebsocketHandler { ws_receiver });
             }
             Err(error) => {
                 error!("Failed to connect to {:?}: {}", &ws_url, error);
@@ -217,10 +205,10 @@ impl SignalKCommunicator {
     }
 
     pub(crate) fn get_f64_for_path(&self, path: String) -> Result<f64, signalk::SignalKGetError> {
-        return if let Some(ref storage) = self.signalk_data {
+        if let Some(ref storage) = self.signalk_data {
             storage.get_f64_for_path(path)
         } else {
             Err(signalk::SignalKGetError::ValueNotSet)
-        };
+        }
     }
 }

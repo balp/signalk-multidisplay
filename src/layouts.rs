@@ -1,7 +1,7 @@
 use crate::communication::SignalKCommunicator;
 use crate::datatypes::{CourseOverGround, DataValues, SpeedOverGround, SpeedThroughWater};
 use eframe::egui;
-use egui::{RichText, Ui, Vec2};
+use egui::{RichText, Ui};
 
 // Layout variants
 // - Single Value
@@ -20,7 +20,7 @@ pub struct SingleValueLayout {
 impl Default for SingleValueLayout {
     fn default() -> Self {
         Self {
-            value: DataValues::ValueCourseOverGround(CourseOverGround::default()),
+            value: DataValues::CourseOverGround(CourseOverGround::default()),
         }
     }
 }
@@ -36,17 +36,17 @@ impl SingleValueLayout {
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     value,
-                    DataValues::ValueCourseOverGround(CourseOverGround::default()),
+                    DataValues::CourseOverGround(CourseOverGround::default()),
                     "COG",
                 );
                 ui.selectable_value(
                     value,
-                    DataValues::ValueSpeedOverGround(SpeedOverGround::default()),
+                    DataValues::SpeedOverGround(SpeedOverGround::default()),
                     "SOG",
                 );
                 ui.selectable_value(
                     value,
-                    DataValues::ValueSpeedThroughWater(SpeedThroughWater::default()),
+                    DataValues::SpeedThroughWater(SpeedThroughWater::default()),
                     "STW",
                 );
             });
