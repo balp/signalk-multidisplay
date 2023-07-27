@@ -40,6 +40,8 @@ use egui::Ui;
 
 #[derive(Debug, PartialEq)]
 pub enum DataValues {
+    AirTemperature(AirTemperature),
+    ApparentWindAngle(ApparentWindAngle),
     SpeedThroughWater(SpeedThroughWater),
     SpeedOverGround(SpeedOverGround),
     CourseOverGround(CourseOverGround),
@@ -286,6 +288,61 @@ impl TemperatureUnit {
                 }
             },
             Err(_) => "-----".to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AirTemperature {
+    pub(crate) name: String,
+    pub(crate) abbreviation: String,
+    pub(crate) display_unit: TemperatureUnit,
+}
+
+impl AirTemperature {
+    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let temp =
+            communicator.get_f64_for_path("self.environment.outside.temperature".to_string());
+        self.display_unit.format(temp)
+    }
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
+    }
+}
+
+impl Default for AirTemperature {
+    fn default() -> Self {
+        Self {
+            name: "Air Temperature".to_string(),
+            abbreviation: "AIR".to_string(),
+            display_unit: TemperatureUnit::Celsius,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ApparentWindAngle {
+    pub(crate) name: String,
+    pub(crate) abbreviation: String,
+    pub(crate) display_unit: AngularUnit,
+}
+
+impl ApparentWindAngle {
+    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let temp = communicator.get_f64_for_path("self.environment.wind.angleApparent".to_string());
+        self.display_unit.format(temp)
+    }
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
+    }
+}
+
+impl Default for ApparentWindAngle {
+    fn default() -> Self {
+        Self {
+            name: "Apparent Wind Angle".to_string(),
+            abbreviation: "AWA".to_string(),
+            display_unit: AngularUnit::Degrees,
         }
     }
 }
