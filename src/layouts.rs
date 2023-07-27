@@ -2,9 +2,7 @@ use eframe::egui;
 use egui::{RichText, Ui};
 
 use crate::communication::SignalKCommunicator;
-use crate::datatypes::{
-    CourseOverGround, DataValues, SpeedOverGround, SpeedThroughWater, WaterTemperature,
-};
+use crate::datatypes::DataValues;
 
 /// The different types of layout that a page can have.
 pub enum Layout {
@@ -51,15 +49,6 @@ impl SingleValueLayout {
     }
 }
 
-impl Default for SingleValueLayout {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            value: DataValues::CourseOverGround(CourseOverGround::default()),
-        }
-    }
-}
-
 impl LayoutComponent for SingleValueLayout {
     fn add_config(&mut self, ui: &mut Ui) {
         let Self { id, value } = self;
@@ -69,26 +58,7 @@ impl LayoutComponent for SingleValueLayout {
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
                 ui.set_min_width(60.0);
-                ui.selectable_value(
-                    value,
-                    DataValues::CourseOverGround(CourseOverGround::default()),
-                    "COG",
-                );
-                ui.selectable_value(
-                    value,
-                    DataValues::SpeedOverGround(SpeedOverGround::default()),
-                    "SOG",
-                );
-                ui.selectable_value(
-                    value,
-                    DataValues::SpeedThroughWater(SpeedThroughWater::default()),
-                    "STW",
-                );
-                ui.selectable_value(
-                    value,
-                    DataValues::WaterTemperature(WaterTemperature::default()),
-                    "SEA",
-                );
+                value.add_config_values(ui);
             });
         value.add_config(*id, ui);
     }
@@ -154,26 +124,7 @@ impl LayoutComponent for DualValuesLayout {
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
                 ui.set_min_width(60.0);
-                ui.selectable_value(
-                    top_value,
-                    DataValues::CourseOverGround(CourseOverGround::default()),
-                    "COG",
-                );
-                ui.selectable_value(
-                    top_value,
-                    DataValues::SpeedOverGround(SpeedOverGround::default()),
-                    "SOG",
-                );
-                ui.selectable_value(
-                    top_value,
-                    DataValues::SpeedThroughWater(SpeedThroughWater::default()),
-                    "STW",
-                );
-                ui.selectable_value(
-                    top_value,
-                    DataValues::WaterTemperature(WaterTemperature::default()),
-                    "SEA",
-                );
+                top_value.add_config_values(ui);
             });
         top_value.add_config(*id, ui);
         egui::ComboBox::new(format!("DualValuesLayout_bottom_{}", id), "Bottom Value")
@@ -181,26 +132,7 @@ impl LayoutComponent for DualValuesLayout {
             .show_ui(ui, |ui| {
                 ui.style_mut().wrap = Some(false);
                 ui.set_min_width(60.0);
-                ui.selectable_value(
-                    bottom_value,
-                    DataValues::CourseOverGround(CourseOverGround::default()),
-                    "COG",
-                );
-                ui.selectable_value(
-                    bottom_value,
-                    DataValues::SpeedOverGround(SpeedOverGround::default()),
-                    "SOG",
-                );
-                ui.selectable_value(
-                    bottom_value,
-                    DataValues::SpeedThroughWater(SpeedThroughWater::default()),
-                    "STW",
-                );
-                ui.selectable_value(
-                    bottom_value,
-                    DataValues::WaterTemperature(WaterTemperature::default()),
-                    "SEA",
-                );
+                bottom_value.add_config_values(ui);
             });
         bottom_value.add_config(*id + 1, ui);
     }

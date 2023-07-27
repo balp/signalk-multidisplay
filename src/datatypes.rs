@@ -91,6 +91,29 @@ impl DataValues {
             DataValues::WaterTemperature(value) => value.display_unit.abbreviation(),
         }
     }
+
+    pub fn add_config_values(self: &mut DataValues, ui: &mut Ui) {
+        ui.selectable_value(
+            self,
+            DataValues::CourseOverGround(CourseOverGround::default()),
+            "COG",
+        );
+        ui.selectable_value(
+            self,
+            DataValues::SpeedOverGround(SpeedOverGround::default()),
+            "SOG",
+        );
+        ui.selectable_value(
+            self,
+            DataValues::SpeedThroughWater(SpeedThroughWater::default()),
+            "STW",
+        );
+        ui.selectable_value(
+            self,
+            DataValues::WaterTemperature(WaterTemperature::default()),
+            "SEA",
+        );
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -138,19 +161,19 @@ impl SpeedUnit {
         match value {
             Ok(val) => match self {
                 SpeedUnit::MeterPerSecond => {
-                    format!("{:5.2}", val)
+                    format!("{:>5.2}", val)
                 }
                 SpeedUnit::Knot => {
                     let display_value = val * 3600. / 1851.85;
-                    format!("{:5.1}", display_value)
+                    format!("{:>5.1}", display_value)
                 }
                 SpeedUnit::MilesPerHour => {
                     let display_value = val * 3600. / 1609.344;
-                    format!("{:5.1}", display_value)
+                    format!("{:>5.1}", display_value)
                 }
                 SpeedUnit::KilometerPerHour => {
                     let display_value = val * 3.600;
-                    format!("{:5.2}", display_value)
+                    format!("{:>5.2}", display_value)
                 }
             },
             Err(_) => "-----".to_owned(),
@@ -195,11 +218,11 @@ impl AngularUnit {
         match value {
             Ok(val) => match self {
                 AngularUnit::Radians => {
-                    format!("{:5.3}", val)
+                    format!("{:>5.3}", val)
                 }
                 AngularUnit::Degrees => {
                     let display_value = val * 180. / std::f64::consts::PI;
-                    format!("{:3.0}", display_value)
+                    format!("{:>5.0}", display_value)
                 }
             },
             Err(_) => "-----".to_owned(),
@@ -252,14 +275,14 @@ impl TemperatureUnit {
             Ok(val) => match self {
                 TemperatureUnit::Celsius => {
                     let display_value = val - 273.15;
-                    format!("{:4.1}", display_value)
+                    format!("{:>5.1}", display_value)
                 }
                 TemperatureUnit::Fahrenheit => {
                     let display_value = 9.0 / 5.0 * (val - 273.15) + 32.0;
-                    format!("{:4.1}", display_value)
+                    format!("{:>5.1}", display_value)
                 }
                 TemperatureUnit::Kelvin => {
-                    format!("{:5.1}", val)
+                    format!("{:>5.1}", val)
                 }
             },
             Err(_) => "-----".to_owned(),
