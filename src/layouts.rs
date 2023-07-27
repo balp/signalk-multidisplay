@@ -1,14 +1,16 @@
 use crate::communication::SignalKCommunicator;
-use crate::datatypes::{CourseOverGround, DataValues, SpeedOverGround, SpeedThroughWater};
+use crate::datatypes::{
+    CourseOverGround, DataValues, SpeedOverGround, SpeedThroughWater, WaterTemperature,
+};
 use eframe::egui;
 use egui::{RichText, Ui};
 
 /// The different types of layout that a page can have.
 pub enum Layout {
     SingleValue(SingleValueLayout),
-    DualValues,
-    TripleValues,
-    FourValues,
+    // DualValues,
+    // TripleValues,
+    // FourValues,
 }
 
 impl LayoutComponent for Layout {
@@ -77,6 +79,11 @@ impl LayoutComponent for SingleValueLayout {
                 ui.selectable_value(
                     value,
                     DataValues::SpeedThroughWater(SpeedThroughWater::default()),
+                    "STW",
+                );
+                ui.selectable_value(
+                    value,
+                    DataValues::WaterTemperature(WaterTemperature::default()),
                     "STW",
                 );
             });

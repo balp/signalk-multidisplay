@@ -48,6 +48,12 @@ impl Default for DisplayApplication {
                         crate::datatypes::CourseOverGround::default(),
                     ),
                 )),
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    3,
+                    crate::datatypes::DataValues::WaterTemperature(
+                        crate::datatypes::WaterTemperature::default(),
+                    ),
+                )),
             ],
             current_layout: 0,
             last_layout_change: Instant::now(),
@@ -87,14 +93,14 @@ impl eframe::App for DisplayApplication {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        log::debug!("TemplateApp::update() - Enter");
+        // log::debug!("TemplateApp::update() - Enter");
         ctx.request_repaint();
         if let Some(ref mut sk_com) = self.communicator {
-            log::debug!("Handle sk_com.handle_data()");
+            // log::debug!("Handle sk_com.handle_data()");
             sk_com.handle_data(ctx);
         }
         if let Some(ref mut server_changed_rx) = self.server_changed_rx {
-            log::debug!("Server changed..");
+            // log::debug!("Server changed..");
             if server_changed_rx.try_recv().is_ok() {
                 if let Some(ref mut communicator) = self.communicator {
                     communicator.disconnect_server();
@@ -106,7 +112,7 @@ impl eframe::App for DisplayApplication {
                 }
             }
         }
-        log::debug!("Draw UI..");
+        // log::debug!("Draw UI..");
 
         let Self {
             server,
@@ -178,10 +184,10 @@ impl eframe::App for DisplayApplication {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(ref comm) = self.communicator {
-                &layouts[*current_layout].draw_ui(ui, comm);
+                layouts[*current_layout].draw_ui(ui, comm);
             }
         });
-        log::debug!("TemplateApp::update() - Exit");
+        // log::debug!("TemplateApp::update() - Exit");
     }
 
     /// Called by the frame work to save state before shutdown.

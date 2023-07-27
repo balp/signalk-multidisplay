@@ -43,6 +43,7 @@ pub enum DataValues {
     SpeedThroughWater(SpeedThroughWater),
     SpeedOverGround(SpeedOverGround),
     CourseOverGround(CourseOverGround),
+    WaterTemperature(WaterTemperature),
 }
 
 impl DataValues {
@@ -51,14 +52,16 @@ impl DataValues {
             DataValues::SpeedThroughWater(value) => value.abbreviation.to_string(),
             DataValues::SpeedOverGround(value) => value.abbreviation.to_string(),
             DataValues::CourseOverGround(value) => value.abbreviation.to_string(),
+            DataValues::WaterTemperature(value) => value.abbreviation.to_string(),
         }
     }
 
     pub fn add_config(&mut self, index: usize, ui: &mut Ui) {
         match self {
-            DataValues::SpeedThroughWater(layout) => layout.add_config(index, ui),
-            DataValues::SpeedOverGround(layout) => layout.add_config(index, ui),
-            DataValues::CourseOverGround(layout) => layout.add_config(index, ui),
+            DataValues::SpeedThroughWater(value) => value.add_config(index, ui),
+            DataValues::SpeedOverGround(value) => value.add_config(index, ui),
+            DataValues::CourseOverGround(value) => value.add_config(index, ui),
+            DataValues::WaterTemperature(value) => value.add_config(index, ui),
         }
     }
 
@@ -67,6 +70,7 @@ impl DataValues {
             DataValues::SpeedThroughWater(value) => value.fmt_value(communicator),
             DataValues::SpeedOverGround(value) => value.fmt_value(communicator),
             DataValues::CourseOverGround(value) => value.fmt_value(communicator),
+            DataValues::WaterTemperature(value) => value.fmt_value(communicator),
         }
     }
 
@@ -75,6 +79,7 @@ impl DataValues {
             DataValues::SpeedThroughWater(value) => value.name.to_string(),
             DataValues::SpeedOverGround(value) => value.name.to_string(),
             DataValues::CourseOverGround(value) => value.name.to_string(),
+            DataValues::WaterTemperature(value) => value.name.to_string(),
         }
     }
 
@@ -83,6 +88,7 @@ impl DataValues {
             DataValues::SpeedThroughWater(value) => value.display_unit.abbreviation(),
             DataValues::SpeedOverGround(value) => value.display_unit.abbreviation(),
             DataValues::CourseOverGround(value) => value.display_unit.abbreviation(),
+            DataValues::WaterTemperature(value) => value.display_unit.abbreviation(),
         }
     }
 }
@@ -202,6 +208,66 @@ impl AngularUnit {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum TemperatureUnit {
+    Celsius,
+    Fahrenheit,
+    Kelvin,
+}
+
+impl TemperatureUnit {
+    pub(crate) fn abbreviation(&self) -> String {
+        match self {
+            TemperatureUnit::Celsius => "°C".to_string(),
+            TemperatureUnit::Fahrenheit => "°F".to_string(),
+            TemperatureUnit::Kelvin => "°K".to_string(),
+        }
+    }
+
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        egui::ComboBox::new(format!("angular_{}", index), "Unit")
+            .selected_text(self.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(
+                    self,
+                    TemperatureUnit::Celsius,
+                    TemperatureUnit::Celsius.abbreviation(),
+                );
+                ui.selectable_value(
+                    self,
+                    TemperatureUnit::Fahrenheit,
+                    TemperatureUnit::Fahrenheit.abbreviation(),
+                );
+                ui.selectable_value(
+                    self,
+                    TemperatureUnit::Kelvin,
+                    TemperatureUnit::Kelvin.abbreviation(),
+                );
+            });
+    }
+
+    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
+        match value {
+            Ok(val) => match self {
+                TemperatureUnit::Celsius => {
+                    let display_value = val - 273.15;
+                    format!("{:4.1}", display_value)
+                }
+                TemperatureUnit::Fahrenheit => {
+                    let display_value = 9.0 / 5.0 * (val - 273.15) + 32.0;
+                    format!("{:4.1}", display_value)
+                }
+                TemperatureUnit::Kelvin => {
+                    format!("{:5.1}", val)
+                }
+            },
+            Err(_) => "-----".to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct SpeedThroughWater {
     pub(crate) name: String,
     pub(crate) abbreviation: String,
@@ -284,6 +350,33 @@ impl Default for CourseOverGround {
             name: "Course Over Ground".to_string(),
             abbreviation: "COG".to_string(),
             display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct WaterTemperature {
+    pub(crate) name: String,
+    pub(crate) abbreviation: String,
+    pub(crate) display_unit: TemperatureUnit,
+}
+
+impl WaterTemperature {
+    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let temp = communicator.get_f64_for_path("self.environment.water.temperature".to_string());
+        self.display_unit.format(temp)
+    }
+    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
+    }
+}
+
+impl Default for WaterTemperature {
+    fn default() -> Self {
+        Self {
+            name: "Water Temperature".to_string(),
+            abbreviation: "SEA".to_string(),
+            display_unit: TemperatureUnit::Celsius,
         }
     }
 }

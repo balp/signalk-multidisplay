@@ -8,13 +8,13 @@ use eframe::egui::Vec2;
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-
+    let full_screen = cfg!(target_os = "linux");
     let native_options = eframe::NativeOptions {
         min_window_size: Some(Vec2::new(800., 480.)),
         max_window_size: Some(Vec2::new(800., 480.)),
         initial_window_size: Some(Vec2::new(800., 480.)),
-        maximized: true,
-        fullscreen: true,
+        maximized: full_screen,
+        fullscreen: full_screen,
         ..Default::default()
     };
 

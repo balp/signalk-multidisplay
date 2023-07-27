@@ -1,6 +1,5 @@
 use egui::Context;
 use ewebsock::{WsEvent, WsMessage, WsReceiver};
-use log::{debug, error, info};
 use signalk::{Storage, V1DeltaFormat, V1Discovery, V1FullFormat};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
@@ -18,16 +17,16 @@ impl WebsocketHandler {
     fn handle_ws_event(storage: &mut Storage, ws_event: WsEvent) {
         match ws_event {
             WsEvent::Opened => {
-                info!("WebSocket delta opened.");
+                log::info!("WebSocket delta opened.");
             }
             WsEvent::Message(ws_message) => {
                 Self::handle_ws_message(storage, ws_message);
             }
             WsEvent::Error(ws_error) => {
-                error!("Websocket error: {:?}", ws_error)
+                log::error!("Websocket error: {:?}", ws_error)
             }
             WsEvent::Closed => {
-                info!("WebSocket delta closed.");
+                log::info!("WebSocket delta closed.");
             }
         }
     }
@@ -35,23 +34,25 @@ impl WebsocketHandler {
     fn handle_ws_message(storage: &mut Storage, ws_message: WsMessage) {
         match ws_message {
             WsMessage::Binary(_) => {
-                debug!("Binary ws message.");
+                log::debug!("Binary ws message.");
             }
             WsMessage::Text(data) => {
+                log::debug!("WS Text message: {:?}", data.as_str());
                 let maybe_sk_delta: serde_json::Result<V1DeltaFormat> =
                     serde_json::from_str(data.as_str());
                 if let Ok(sk_delta) = maybe_sk_delta {
+                    log::debug!("New sk delta: {:?}", sk_delta);
                     storage.update(&sk_delta);
                 }
             }
             WsMessage::Unknown(_) => {
-                debug!("Unknown ws message.");
+                log::debug!("Unknown ws message.");
             }
             WsMessage::Ping(_) => {
-                debug!("Ping ws message.");
+                log::debug!("Ping ws message.");
             }
             WsMessage::Pong(_) => {
-                debug!("Pong ws message.");
+                log::debug!("Pong ws message.");
             }
         }
     }
@@ -86,20 +87,20 @@ impl SignalKCommunicator {
                         serde_json::from_slice(&response.bytes);
                     if let Ok(discovery_value) = discovery {
                         if let Err(e) = signalk_tx.send(discovery_value) {
-                            error!("Can't send discovery back {:?}", e);
+                            log::error!("Can't send discovery back {:?}", e);
                         } else {
-                            info!("Discovery message sent");
+                            log::info!("Discovery message sent");
                         }
                     }
                 }
                 Err(err) => {
-                    error!("Error: {:?}", err);
+                    log::error!("Error: {:?}", err);
                 }
             },
         );
     }
 
-    pub(crate) fn handle_data(&mut self, ctx: &egui::Context) {
+    pub(crate) fn handle_data(&mut self, ctx: &Context) {
         self.handle_discovery(ctx);
         self.handle_full_message(ctx);
         self.handle_signalk_data();
@@ -116,6 +117,7 @@ impl SignalKCommunicator {
     fn handle_full_message(&mut self, ctx: &Context) {
         if let Some(ref mut full_rx_channel) = self.full_rx {
             if let Ok(full) = full_rx_channel.try_recv() {
+                log::debug!("New sk full message");
                 ctx.request_repaint();
                 self.signalk_data = Some(Storage::new(full));
             }
@@ -126,10 +128,11 @@ impl SignalKCommunicator {
         if let Some(ref mut discovery_rx_channel) = self.discovery_rx {
             match discovery_rx_channel.try_recv() {
                 Ok(discovery) => {
+                    log::debug!("New discovery message");
                     self.set_discovery(ctx, discovery);
                 }
                 Err(_) => {
-                    error!("Unable to recv discovery data");
+                    log::error!("Unable to recv discovery data");
                 }
             }
         }
@@ -160,18 +163,18 @@ impl SignalKCommunicator {
     }
 
     fn setup_websocket_delta(&mut self, ctx: &Context, endpoint: &String) {
-        debug!("Connect websocket to {:?}", endpoint);
+        log::debug!("Connect websocket to {:?}", endpoint);
         let ws_url = endpoint.to_string();
         let ctx_clone = ctx.clone();
-        info!("Connect to websocket url: {}", ws_url);
+        log::info!("Connect to websocket url: {}", ws_url);
         let wakeup = move || ctx_clone.request_repaint();
         match ewebsock::connect_with_wakeup(&ws_url, wakeup) {
             Ok((_ws_sender, ws_receiver)) => {
-                debug!("Websocket connected ok!");
+                log::debug!("Websocket connected ok!");
                 self.ws_handler = Some(WebsocketHandler { ws_receiver });
             }
             Err(error) => {
-                error!("Failed to connect to {:?}: {}", &ws_url, error);
+                log::error!("Failed to connect to {:?}: {}", &ws_url, error);
             }
         }
     }
@@ -186,19 +189,19 @@ impl SignalKCommunicator {
             request,
             move |result: ehttp::Result<ehttp::Response>| match result {
                 Ok(response) => {
-                    debug!("Full Got: {:?}", response);
+                    log::debug!("Full Got: {:?}", response);
                     let full: serde_json::Result<V1FullFormat> =
                         serde_json::from_slice(&response.bytes);
-                    debug!("ful data: {:?}", full);
+                    log::debug!("Full data: {:?}", full);
                     if let Ok(full_value) = full {
                         ctx_clone.request_repaint();
                         if let Err(err) = full_sk_tx.send(full_value) {
-                            error!("Can't send full back {:?}", err)
+                            log::error!("Can't send full back {:?}", err)
                         }
                     }
                 }
                 Err(err) => {
-                    debug!("Get full error: {:?}", err);
+                    log::debug!("Get full error: {:?}", err);
                 }
             },
         );
