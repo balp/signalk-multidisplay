@@ -1,8 +1,10 @@
-use crate::communication::SignalKCommunicator;
-use crate::layouts::LayoutComponent;
-use eframe::egui;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::{Duration, Instant};
+
+use eframe::egui;
+
+use crate::communication::SignalKCommunicator;
+use crate::layouts::LayoutComponent;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -30,22 +32,19 @@ impl Default for DisplayApplication {
             view_config: false,
             communicator: None,
             layouts: vec![
+                crate::layouts::Layout::DualValues(crate::layouts::DualValuesLayout::new(
+                    4,
+                    crate::datatypes::DataValues::SpeedOverGround(
+                        crate::datatypes::SpeedOverGround::default(),
+                    ),
+                    crate::datatypes::DataValues::CourseOverGround(
+                        crate::datatypes::CourseOverGround::default(),
+                    ),
+                )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
                     0,
                     crate::datatypes::DataValues::SpeedThroughWater(
                         crate::datatypes::SpeedThroughWater::default(),
-                    ),
-                )),
-                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
-                    1,
-                    crate::datatypes::DataValues::SpeedOverGround(
-                        crate::datatypes::SpeedOverGround::default(),
-                    ),
-                )),
-                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
-                    2,
-                    crate::datatypes::DataValues::CourseOverGround(
-                        crate::datatypes::CourseOverGround::default(),
                     ),
                 )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
