@@ -199,7 +199,7 @@ impl AngularUnit {
                 }
                 AngularUnit::Degrees => {
                     let display_value = val * 180. / std::f64::consts::PI;
-                    format!("{:5.1}", display_value)
+                    format!("{:3.0}", display_value)
                 }
             },
             Err(_) => "-----".to_owned(),
