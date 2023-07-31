@@ -35,22 +35,22 @@ impl Default for DisplayApplication {
                 crate::layouts::Layout::DualValues(crate::layouts::DualValuesLayout::new(
                     4,
                     crate::datatypes::DataValues::SpeedOverGround(
-                        crate::datatypes::SpeedOverGround::default(),
+                        crate::datavalues::SpeedOverGround::default(),
                     ),
                     crate::datatypes::DataValues::CourseOverGround(
-                        crate::datatypes::CourseOverGround::default(),
+                        crate::datavalues::CourseOverGround::default(),
                     ),
                 )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
                     0,
                     crate::datatypes::DataValues::SpeedThroughWater(
-                        crate::datatypes::SpeedThroughWater::default(),
+                        crate::datavalues::SpeedThroughWater::default(),
                     ),
                 )),
                 crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
                     3,
                     crate::datatypes::DataValues::WaterTemperature(
-                        crate::datatypes::WaterTemperature::default(),
+                        crate::datavalues::WaterTemperature::default(),
                     ),
                 )),
             ],

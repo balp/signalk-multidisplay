@@ -3,6 +3,8 @@
 mod app;
 mod communication;
 mod datatypes;
+mod dataunits;
+mod datavalues;
 mod layouts;
 
 pub use app::DisplayApplication;

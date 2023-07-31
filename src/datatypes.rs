@@ -1,6 +1,3 @@
-use crate::communication::SignalKCommunicator;
-use egui::Ui;
-
 // Garmins data displays:
 //  AIR - Air Temperature
 //  AWA - Apparent Wind Angle
@@ -38,6 +35,13 @@ use egui::Ui;
 //  WND - Velocity made good upwind
 //  XTE - Cross track error
 
+use crate::communication::SignalKCommunicator;
+use crate::datavalues::{
+    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, CourseOverGround, DataValue,
+    SpeedOverGround, SpeedThroughWater, WaterTemperature,
+};
+use egui::Ui;
+
 #[derive(Debug, PartialEq)]
 pub enum DataValues {
     AirTemperature(AirTemperature),
@@ -53,11 +57,11 @@ pub enum DataValues {
 impl DataValues {
     pub fn abbreviation(&self) -> String {
         match self {
-            DataValues::SpeedThroughWater(value) => value.abbreviation.to_string(),
-            DataValues::SpeedOverGround(value) => value.abbreviation.to_string(),
-            DataValues::CourseOverGround(value) => value.abbreviation.to_string(),
-            DataValues::WaterTemperature(value) => value.abbreviation.to_string(),
-            DataValues::AirTemperature(value) => value.abbreviation.to_string(),
+            DataValues::SpeedThroughWater(value) => value.abbreviation(),
+            DataValues::SpeedOverGround(value) => value.abbreviation(),
+            DataValues::CourseOverGround(value) => value.abbreviation(),
+            DataValues::WaterTemperature(value) => value.abbreviation(),
+            DataValues::AirTemperature(value) => value.abbreviation(),
             DataValues::ApparentWindAngle(value) => value.abbreviation(),
             DataValues::ApparentWindSpeed(value) => value.abbreviation(),
             DataValues::Barometer(value) => value.abbreviation(),
@@ -92,12 +96,12 @@ impl DataValues {
 
     pub fn name(&self) -> String {
         match &self {
-            DataValues::SpeedThroughWater(value) => value.name.to_string(),
-            DataValues::SpeedOverGround(value) => value.name.to_string(),
-            DataValues::CourseOverGround(value) => value.name.to_string(),
-            DataValues::WaterTemperature(value) => value.name.to_string(),
-            DataValues::AirTemperature(value) => value.name.to_string(),
-            DataValues::ApparentWindAngle(value) => value.name.to_string(),
+            DataValues::SpeedThroughWater(value) => value.name(),
+            DataValues::SpeedOverGround(value) => value.name(),
+            DataValues::CourseOverGround(value) => value.name(),
+            DataValues::WaterTemperature(value) => value.name(),
+            DataValues::AirTemperature(value) => value.name(),
+            DataValues::ApparentWindAngle(value) => value.name(),
             DataValues::ApparentWindSpeed(value) => value.name(),
             DataValues::Barometer(value) => value.name(),
         }
@@ -105,12 +109,12 @@ impl DataValues {
 
     pub fn unit_name(&self) -> String {
         match &self {
-            DataValues::SpeedThroughWater(value) => value.display_unit.abbreviation(),
-            DataValues::SpeedOverGround(value) => value.display_unit.abbreviation(),
-            DataValues::CourseOverGround(value) => value.display_unit.abbreviation(),
-            DataValues::WaterTemperature(value) => value.display_unit.abbreviation(),
-            DataValues::AirTemperature(value) => value.display_unit.abbreviation(),
-            DataValues::ApparentWindAngle(value) => value.display_unit.abbreviation(),
+            DataValues::SpeedThroughWater(value) => value.unit_name(),
+            DataValues::SpeedOverGround(value) => value.unit_name(),
+            DataValues::CourseOverGround(value) => value.unit_name(),
+            DataValues::WaterTemperature(value) => value.unit_name(),
+            DataValues::AirTemperature(value) => value.unit_name(),
+            DataValues::ApparentWindAngle(value) => value.unit_name(),
             DataValues::ApparentWindSpeed(value) => value.unit_name(),
             DataValues::Barometer(value) => value.unit_name(),
         }
@@ -132,11 +136,7 @@ impl DataValues {
             DataValues::ApparentWindSpeed(ApparentWindSpeed::default()),
             "AWS",
         );
-        ui.selectable_value(
-            self,
-            DataValues::Barometer(Barometer::default()),
-            "BAR",
-        );
+        ui.selectable_value(self, DataValues::Barometer(Barometer::default()), "BAR");
         ui.selectable_value(
             self,
             DataValues::CourseOverGround(CourseOverGround::default()),
@@ -157,522 +157,5 @@ impl DataValues {
             DataValues::WaterTemperature(WaterTemperature::default()),
             "SEA",
         );
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum SpeedUnit {
-    MeterPerSecond,
-    Knot,
-    MilesPerHour,
-    KilometerPerHour,
-}
-
-impl SpeedUnit {
-    pub(crate) fn abbreviation(&self) -> String {
-        match self {
-            SpeedUnit::MeterPerSecond => "m/s".to_string(),
-            SpeedUnit::Knot => "kn".to_string(),
-            SpeedUnit::MilesPerHour => "mph".to_string(),
-            SpeedUnit::KilometerPerHour => "km/h".to_string(),
-        }
-    }
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        egui::ComboBox::new(format!("data_type_{}", index), "Unit")
-            .selected_text(self.abbreviation())
-            .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
-                ui.set_min_width(60.0);
-                ui.selectable_value(
-                    self,
-                    SpeedUnit::MeterPerSecond,
-                    SpeedUnit::MeterPerSecond.abbreviation(),
-                );
-                ui.selectable_value(self, SpeedUnit::Knot, SpeedUnit::Knot.abbreviation());
-                ui.selectable_value(
-                    self,
-                    SpeedUnit::MilesPerHour,
-                    SpeedUnit::MilesPerHour.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    SpeedUnit::KilometerPerHour,
-                    SpeedUnit::KilometerPerHour.abbreviation(),
-                );
-            });
-    }
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
-        match value {
-            Ok(val) => match self {
-                SpeedUnit::MeterPerSecond => {
-                    format!("{:>5.2}", val)
-                }
-                SpeedUnit::Knot => {
-                    let display_value = val * 3600. / 1851.85;
-                    format!("{:>5.1}", display_value)
-                }
-                SpeedUnit::MilesPerHour => {
-                    let display_value = val * 3600. / 1609.344;
-                    format!("{:>5.1}", display_value)
-                }
-                SpeedUnit::KilometerPerHour => {
-                    let display_value = val * 3.600;
-                    format!("{:>5.2}", display_value)
-                }
-            },
-            Err(_) => "-----".to_owned(),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum AngularUnit {
-    Radians,
-    Degrees,
-}
-
-impl AngularUnit {
-    pub(crate) fn abbreviation(&self) -> String {
-        match self {
-            AngularUnit::Radians => "rad".to_string(),
-            AngularUnit::Degrees => "deg".to_string(),
-        }
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        egui::ComboBox::new(format!("angular_{}", index), "Unit")
-            .selected_text(self.abbreviation())
-            .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
-                ui.set_min_width(60.0);
-                ui.selectable_value(
-                    self,
-                    AngularUnit::Degrees,
-                    AngularUnit::Degrees.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    AngularUnit::Radians,
-                    AngularUnit::Radians.abbreviation(),
-                );
-            });
-    }
-
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
-        match value {
-            Ok(val) => match self {
-                AngularUnit::Radians => {
-                    format!("{:>5.3}", val)
-                }
-                AngularUnit::Degrees => {
-                    let display_value = val * 180. / std::f64::consts::PI;
-                    format!("{:>5.0}", display_value)
-                }
-            },
-            Err(_) => "-----".to_owned(),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum TemperatureUnit {
-    Celsius,
-    Fahrenheit,
-    Kelvin,
-}
-
-impl TemperatureUnit {
-    pub(crate) fn abbreviation(&self) -> String {
-        match self {
-            TemperatureUnit::Celsius => "°C".to_string(),
-            TemperatureUnit::Fahrenheit => "°F".to_string(),
-            TemperatureUnit::Kelvin => "°K".to_string(),
-        }
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        egui::ComboBox::new(format!("angular_{}", index), "Unit")
-            .selected_text(self.abbreviation())
-            .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
-                ui.set_min_width(60.0);
-                ui.selectable_value(
-                    self,
-                    TemperatureUnit::Celsius,
-                    TemperatureUnit::Celsius.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    TemperatureUnit::Fahrenheit,
-                    TemperatureUnit::Fahrenheit.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    TemperatureUnit::Kelvin,
-                    TemperatureUnit::Kelvin.abbreviation(),
-                );
-            });
-    }
-
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
-        match value {
-            Ok(val) => match self {
-                TemperatureUnit::Celsius => {
-                    let display_value = val - 273.15;
-                    format!("{:>5.1}", display_value)
-                }
-                TemperatureUnit::Fahrenheit => {
-                    let display_value = 9.0 / 5.0 * (val - 273.15) + 32.0;
-                    format!("{:>5.1}", display_value)
-                }
-                TemperatureUnit::Kelvin => {
-                    format!("{:>5.1}", val)
-                }
-            },
-            Err(_) => "-----".to_owned(),
-        }
-    }
-}
-#[derive(Debug, PartialEq)]
-pub enum PressureUnit {
-    HectoPascal,
-    Millibar,
-    MilliMetresOfMercury,
-}
-
-impl PressureUnit {
-    pub(crate) fn abbreviation(&self) -> String {
-        match self {
-            PressureUnit::HectoPascal => "hPa".to_string(),
-            PressureUnit::Millibar => "mbar".to_string(),
-            PressureUnit::MilliMetresOfMercury => "mmHg".to_string(),
-        }
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        egui::ComboBox::new(format!("angular_{}", index), "Unit")
-            .selected_text(self.abbreviation())
-            .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
-                ui.set_min_width(60.0);
-                ui.selectable_value(
-                    self,
-                    PressureUnit::HectoPascal,
-                    PressureUnit::HectoPascal.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    PressureUnit::Millibar,
-                    PressureUnit::Millibar.abbreviation(),
-                );
-                ui.selectable_value(
-                    self,
-                    PressureUnit::MilliMetresOfMercury,
-                    PressureUnit::MilliMetresOfMercury.abbreviation(),
-                );
-            });
-    }
-
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
-        match value {
-            Ok(val) => match self {
-                PressureUnit::HectoPascal => {
-                    let display_value = val * 0.01;
-                    format!("{:>5.0}", display_value)
-                }
-                PressureUnit::Millibar => {
-                    let display_value = val * 0.01;
-                    format!("{:>5.0}", display_value)
-                }
-                PressureUnit::MilliMetresOfMercury => {
-                    let display_value = val * 0.00750062;
-                    format!("{:>5.0}", display_value)
-                }
-            },
-            Err(_) => "-----".to_owned(),
-        }
-    }
-}
-
-trait DataValue {
-    fn name(&self) -> String;
-    fn unit_name(&self) -> String;
-    fn abbreviation(&self) -> String;
-    fn add_config(&mut self, index: usize, ui: &mut Ui);
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String;
-
-}
-
-#[derive(Debug, PartialEq)]
-pub struct AirTemperature {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: TemperatureUnit,
-}
-
-impl DataValue for AirTemperature {
-    fn name(&self) -> String {
-        self.name.to_string()
-    }
-
-    fn unit_name(&self) -> String {
-        self.display_unit.abbreviation()
-    }
-
-    fn abbreviation(&self) -> String {
-        self.abbreviation.to_string()
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp =
-            communicator.get_f64_for_path("self.environment.outside.temperature".to_string());
-        self.display_unit.format(temp)
-    }
-}
-
-impl Default for AirTemperature {
-    fn default() -> Self {
-        Self {
-            name: "Air Temperature".to_string(),
-            abbreviation: "AIR".to_string(),
-            display_unit: TemperatureUnit::Celsius,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ApparentWindAngle {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: AngularUnit,
-}
-
-impl DataValue for ApparentWindAngle {
-    fn name(&self) -> String {
-        self.name.to_string()
-    }
-    fn unit_name(&self) -> String {
-        self.display_unit.abbreviation()
-    }
-
-    fn abbreviation(&self) -> String {
-        self.abbreviation.to_string()
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp = communicator.get_f64_for_path("self.environment.wind.angleApparent".to_string());
-        self.display_unit.format(temp)
-    }
-}
-
-impl Default for ApparentWindAngle {
-    fn default() -> Self {
-        Self {
-            name: "Apparent Wind Angle".to_string(),
-            abbreviation: "AWA".to_string(),
-            display_unit: AngularUnit::Degrees,
-        }
-    }
-}
-
-
-#[derive(Debug, PartialEq)]
-pub struct ApparentWindSpeed {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: SpeedUnit,
-}
-
-impl DataValue for ApparentWindSpeed {
-    fn name(&self) -> String {
-        self.name.to_string()
-    }
-    fn unit_name(&self) -> String {
-        self.display_unit.abbreviation()
-    }
-
-    fn abbreviation(&self) -> String {
-        self.abbreviation.to_string()
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp = communicator.get_f64_for_path("self.environment.wind.angleApparent".to_string());
-        self.display_unit.format(temp)
-    }
-}
-
-impl Default for ApparentWindSpeed {
-    fn default() -> Self {
-        Self {
-            name: "Apparent Wind Speed".to_string(),
-            abbreviation: "AWS".to_string(),
-            display_unit: SpeedUnit::MeterPerSecond,
-        }
-    }
-}
-
-
-#[derive(Debug, PartialEq)]
-pub struct Barometer {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: PressureUnit,
-}
-
-impl DataValue for Barometer {
-    fn name(&self) -> String {
-        self.name.to_string()
-    }
-    fn unit_name(&self) -> String {
-        self.display_unit.abbreviation()
-    }
-
-    fn abbreviation(&self) -> String {
-        self.abbreviation.to_string()
-    }
-
-    fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-
-    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp = communicator.get_f64_for_path("self.environment.wind.angleApparent".to_string());
-        self.display_unit.format(temp)
-    }
-}
-
-impl Default for Barometer {
-    fn default() -> Self {
-        Self {
-            name: "Barometer".to_string(),
-            abbreviation: "BAR".to_string(),
-            display_unit: PressureUnit::HectoPascal,
-        }
-    }
-}
-
-
-#[derive(Debug, PartialEq)]
-pub struct SpeedThroughWater {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: SpeedUnit,
-}
-
-impl SpeedThroughWater {
-    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let stw = communicator.get_f64_for_path("self.environment.outside.pressure".to_string());
-        self.display_unit.format(stw)
-    }
-
-    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-}
-
-impl Default for SpeedThroughWater {
-    fn default() -> Self {
-        Self {
-            name: "Water Speed".to_string(),
-            abbreviation: "STW".to_string(),
-            display_unit: SpeedUnit::MeterPerSecond,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct SpeedOverGround {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: SpeedUnit,
-}
-
-impl SpeedOverGround {
-    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let sog = communicator.get_f64_for_path("self.navigation.speedOverGround".to_string());
-        self.display_unit.format(sog)
-    }
-
-    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-}
-
-impl Default for SpeedOverGround {
-    fn default() -> Self {
-        Self {
-            name: "Speed Ground".to_string(),
-            abbreviation: "SOG".to_string(),
-            display_unit: SpeedUnit::Knot,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct CourseOverGround {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: AngularUnit,
-}
-
-impl CourseOverGround {
-    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let mut cog =
-            communicator.get_f64_for_path("self.navigation.courseOverGroundMagnetic".to_string());
-        if cog.is_err() {
-            cog = communicator.get_f64_for_path("self.navigation.courseOverGroundTrue".to_string());
-        }
-        self.display_unit.format(cog)
-    }
-    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-}
-
-impl Default for CourseOverGround {
-    fn default() -> Self {
-        Self {
-            name: "Course Over Ground".to_string(),
-            abbreviation: "COG".to_string(),
-            display_unit: AngularUnit::Degrees,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct WaterTemperature {
-    pub(crate) name: String,
-    pub(crate) abbreviation: String,
-    pub(crate) display_unit: TemperatureUnit,
-}
-
-impl WaterTemperature {
-    pub(crate) fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp = communicator.get_f64_for_path("self.environment.water.temperature".to_string());
-        self.display_unit.format(temp)
-    }
-    pub(crate) fn add_config(&mut self, index: usize, ui: &mut Ui) {
-        self.display_unit.add_config(index, ui);
-    }
-}
-
-impl Default for WaterTemperature {
-    fn default() -> Self {
-        Self {
-            name: "Water Temperature".to_string(),
-            abbreviation: "SEA".to_string(),
-            display_unit: TemperatureUnit::Celsius,
-        }
     }
 }
