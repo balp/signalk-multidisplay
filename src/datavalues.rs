@@ -10,6 +10,7 @@ pub trait DataValue {
     fn fmt_value(&self, communicator: &SignalKCommunicator) -> String;
 }
 
+
 #[derive(Debug, PartialEq)]
 pub struct AirTemperature {
     name: String,
