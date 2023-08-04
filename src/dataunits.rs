@@ -1,11 +1,10 @@
 use egui::Ui;
 
-
- pub trait DataUnit {
-     fn abbreviation(&self) -> String;
-     fn add_config(&mut self, index: usize, ui: &mut Ui);
-     fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String;
- }
+pub trait DataUnit {
+    fn abbreviation(&self) -> String;
+    fn add_config(&mut self, index: usize, ui: &mut Ui);
+    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String;
+}
 
 #[derive(Debug, PartialEq)]
 pub enum SpeedUnit {

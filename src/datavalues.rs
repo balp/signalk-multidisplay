@@ -1,6 +1,6 @@
-use egui::Ui;
 use crate::communication::SignalKCommunicator;
 use crate::dataunits::{AngularUnit, DataUnit, PressureUnit, SpeedUnit, TemperatureUnit};
+use egui::Ui;
 
 pub trait DataValue {
     fn name(&self) -> String;
