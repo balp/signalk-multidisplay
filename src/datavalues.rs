@@ -1,8 +1,9 @@
 use crate::communication::SignalKCommunicator;
-use crate::dataunits::{AngularUnit, DataUnit, PressureUnit, SpeedUnit, TemperatureUnit};
-use egui::Ui;
+use crate::dataunits::{
+    AngularUnit, DataUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit,
+};
 use datavalue_derive::DataValue;
-
+use egui::Ui;
 
 pub trait DataValue {
     fn name(&self) -> String;
@@ -12,9 +13,8 @@ pub trait DataValue {
     fn fmt_value(&self, communicator: &SignalKCommunicator) -> String;
 }
 
-
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.environment.outside.temperature")]
+#[data_value(data_path = "self.environment.outside.temperature")]
 pub struct AirTemperature {
     name: String,
     abbreviation: String,
@@ -32,7 +32,7 @@ impl Default for AirTemperature {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.environment.wind.angleApparent")]
+#[data_value(data_path = "self.environment.wind.angleApparent")]
 pub struct ApparentWindAngle {
     name: String,
     abbreviation: String,
@@ -50,7 +50,7 @@ impl Default for ApparentWindAngle {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.environment.wind.speedApparent")]
+#[data_value(data_path = "self.environment.wind.speedApparent")]
 pub struct ApparentWindSpeed {
     name: String,
     abbreviation: String,
@@ -68,7 +68,7 @@ impl Default for ApparentWindSpeed {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.environment.outside.pressure")]
+#[data_value(data_path = "self.environment.outside.pressure")]
 pub struct Barometer {
     name: String,
     abbreviation: String,
@@ -86,7 +86,25 @@ impl Default for Barometer {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.navigation.speedThroughWater")]
+#[data_value(data_path = "self.environment.outside.pressure")]
+pub struct Battery {
+    name: String,
+    abbreviation: String,
+    display_unit: VoltageUnit,
+}
+
+impl Default for Battery {
+    fn default() -> Self {
+        Self {
+            name: "Battery".to_string(),
+            abbreviation: "BAT".to_string(),
+            display_unit: VoltageUnit::Volt,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.speedThroughWater")]
 pub struct SpeedThroughWater {
     name: String,
     abbreviation: String,
@@ -104,7 +122,7 @@ impl Default for SpeedThroughWater {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.navigation.speedOverGround")]
+#[data_value(data_path = "self.navigation.speedOverGround")]
 pub struct SpeedOverGround {
     name: String,
     abbreviation: String,
@@ -122,7 +140,7 @@ impl Default for SpeedOverGround {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.navigation.courseOverGroundMagnetic")]
+#[data_value(data_path = "self.navigation.courseOverGroundTrue")]
 pub struct CourseOverGround {
     name: String,
     abbreviation: String,
@@ -140,7 +158,7 @@ impl Default for CourseOverGround {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path="self.environment.water.temperature")]
+#[data_value(data_path = "self.environment.water.temperature")]
 pub struct WaterTemperature {
     name: String,
     abbreviation: String,

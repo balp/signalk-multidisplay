@@ -1,9 +1,10 @@
 use egui::Ui;
+use signalk::SignalKGetError;
 
 pub trait DataUnit {
     fn abbreviation(&self) -> String;
     fn add_config(&mut self, index: usize, ui: &mut Ui);
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String;
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String;
 }
 
 #[derive(Debug, PartialEq)]
@@ -47,7 +48,7 @@ impl DataUnit for SpeedUnit {
                 );
             });
     }
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         match value {
             Ok(val) => match self {
                 SpeedUnit::MeterPerSecond => {
@@ -104,7 +105,7 @@ impl DataUnit for AngularUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         match value {
             Ok(val) => match self {
                 AngularUnit::Radians => {
@@ -160,7 +161,7 @@ impl DataUnit for TemperatureUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         match value {
             Ok(val) => match self {
                 TemperatureUnit::Celsius => {
@@ -220,7 +221,7 @@ impl DataUnit for PressureUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, signalk::SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         match value {
             Ok(val) => match self {
                 PressureUnit::HectoPascal => {
@@ -237,6 +238,26 @@ impl DataUnit for PressureUnit {
                 }
             },
             Err(_) => "-----".to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum VoltageUnit {
+    Volt,
+}
+
+impl DataUnit for VoltageUnit {
+    fn abbreviation(&self) -> String {
+        "V".to_string()
+    }
+
+    fn add_config(&mut self, _index: usize, _ui: &mut Ui) {}
+
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+        match value {
+            Ok(val) => format!("{:>5.0}", val),
+            Err(_) => "-----".to_string(),
         }
     }
 }

@@ -1,44 +1,45 @@
 // Garmins data displays:
-//  AIR - Air Temperature
-//  AWA - Apparent Wind Angle
-//  AWS - Apparent Wind Speed
-//  BAR - Barometer
-//  BAT - Battery voltage
-//  BSP - Boat Speed aka Speed Through Water
-//  BTW - Direction from location to designation
-//  COG - Course over ground
-//  CTS - Course to steer
-//  DIS - Distance traveled
-//  DPT - Depth of water
-//  DRF - Speed of current
-//  DTW - Distance to waypoint
-//  ELV - Altitude
-//  ERR - Error of current position
-//  GWD - Direction of wind relative ground
-//  GWS - Speed of wind relative ground
-//  HDG - The direction the boat points
-//  ODO - Running tally of distance
-//  OTH - Opposite track direction
-//  POS - Current position
-//  RACE - Race-timer
-//  REF - A steer pilot reference
-//  RUD - Rudder angle
-//  SEA - Temperature of sea water
-//  SOG - Speed over ground
-//  STR - The steep pilot
-//  TRP - A running tally of distance travel since last reset
-//  TWA - True wind angle from bow
-//  TWD - True wind direction rel north
-//  TWS - True wind speed relative vessel
-//  UTC - Universal time coordinated
-//  VMG - Speed towards designation
-//  WND - Velocity made good upwind
-//  XTE - Cross track error
+//  Abbreviation    Name
+//  AIR           | Air Temperature                         | + self.environment.outside.temperature
+//  AWA           | Apparent Wind Angle                     | + self.environment.wind.angleApparent
+//  AWS           | Apparent Wind Speed                     | + self.environment.wind.speedApparent
+//  BAR           | Barometer                               | + self.environment.outside.pressure
+//  BAT           | Battery voltage                         | self.electrical.batteries.house.voltage
+//  BSP           | Boat Speed aka Speed Through Water      | + self.navigation.speedThroughWater
+//  BTW           | Direction from location to designation  | self.navigation.course.nextPoint.bearingTrue
+//  COG           | Course over ground                      | + self.navigation.courseOverGroundTrue
+//  CTS           | Course to steer                         | ??
+//  DIS           | Distance traveled                       | self.navigation.log ??
+//  DPT           | Depth of water                          | self.environment.depth.belowSurface
+//  DRF           | Speed of current                        | self.environment.current.drift
+//  DTW           | Distance to waypoint                    | self.navigation.course.nextPoint.distance
+//  ELV           | Altitude                                | self.navigation.position.alittude
+//  ERR           | Error of current position               | ??
+//  GWD           | Direction of wind relative ground       | self.environment.wind.directionTrue
+//  GWS           | Speed of wind relative ground           | self.environment.wind.speedOverGround
+//  HDG           | The direction the boat points           | self.navigation.headingTrue
+//  ODO           | Running tally of distance               | self.navigation.log ??
+//  OTH           | Opposite track direction                | ??
+//  POS           | Current position                        | self.navigation.position
+//  RACE          | Race-timer                              | ??
+//  REF           | A steer pilot reference                 | ??
+//  RUD           | Rudder angle                            | self.steering.rudderAngle
+//  SEA           | Temperature of sea water                | + self.environment.outside.temperature
+//  SOG           | Speed over ground                       | + self.navigation.speedOverGround
+//  STR           | The steep pilot                         | ??
+//  TRP           | A running tally of distance travel since last reset | self.navigation.trip.log
+//  TWA           | True wind angle from bow                | self.environment.wind.angleTrueGround
+//  TWD           | True wind direction rel north           | self.environment.wind.directionTrue
+//  TWS           | True wind speed relative vessel         | self.environment.wind.speedTrue
+//  UTC           | Universal time coordinated              | self.navigation.datetime
+//  VMG           | Speed towards designation               | self.navigation.course.nextPoint.velocityMadeGood
+//  WND           | Velocity made good upwind               | ??
+//  XTE           | Cross track error                       | self.navigation.course.crossTrackError
 
 use crate::communication::SignalKCommunicator;
 use crate::datavalues::{
-    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, CourseOverGround, DataValue,
-    SpeedOverGround, SpeedThroughWater, WaterTemperature,
+    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery, CourseOverGround,
+    DataValue, SpeedOverGround, SpeedThroughWater, WaterTemperature,
 };
 use egui::Ui;
 
@@ -48,6 +49,7 @@ pub enum DataValues {
     ApparentWindAngle(ApparentWindAngle),
     ApparentWindSpeed(ApparentWindSpeed),
     Barometer(Barometer),
+    Battery(Battery),
     SpeedThroughWater(SpeedThroughWater),
     SpeedOverGround(SpeedOverGround),
     CourseOverGround(CourseOverGround),
@@ -65,6 +67,7 @@ impl DataValues {
             DataValues::ApparentWindAngle(value) => value.abbreviation(),
             DataValues::ApparentWindSpeed(value) => value.abbreviation(),
             DataValues::Barometer(value) => value.abbreviation(),
+            DataValues::Battery(value) => value.abbreviation(),
         }
     }
 
@@ -78,6 +81,7 @@ impl DataValues {
             DataValues::ApparentWindAngle(value) => value.add_config(index, ui),
             DataValues::ApparentWindSpeed(value) => value.add_config(index, ui),
             DataValues::Barometer(value) => value.add_config(index, ui),
+            DataValues::Battery(value) => value.add_config(index, ui),
         }
     }
 
@@ -91,6 +95,7 @@ impl DataValues {
             DataValues::ApparentWindAngle(value) => value.fmt_value(communicator),
             DataValues::ApparentWindSpeed(value) => value.fmt_value(communicator),
             DataValues::Barometer(value) => value.fmt_value(communicator),
+            DataValues::Battery(value) => value.fmt_value(communicator),
         }
     }
 
@@ -104,6 +109,7 @@ impl DataValues {
             DataValues::ApparentWindAngle(value) => value.name(),
             DataValues::ApparentWindSpeed(value) => value.name(),
             DataValues::Barometer(value) => value.name(),
+            DataValues::Battery(value) => value.name(),
         }
     }
 
@@ -117,6 +123,7 @@ impl DataValues {
             DataValues::ApparentWindAngle(value) => value.unit_name(),
             DataValues::ApparentWindSpeed(value) => value.unit_name(),
             DataValues::Barometer(value) => value.unit_name(),
+            DataValues::Battery(value) => value.unit_name(),
         }
     }
 
@@ -137,6 +144,7 @@ impl DataValues {
             "AWS",
         );
         ui.selectable_value(self, DataValues::Barometer(Barometer::default()), "BAR");
+        ui.selectable_value(self, DataValues::Battery(Battery::default()), "BAT");
         ui.selectable_value(
             self,
             DataValues::CourseOverGround(CourseOverGround::default()),

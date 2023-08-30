@@ -20,6 +20,7 @@ impl WebsocketHandler {
                 log::info!("WebSocket delta opened.");
             }
             WsEvent::Message(ws_message) => {
+                log::info!("WebSocket message.");
                 Self::handle_ws_message(storage, ws_message);
             }
             WsEvent::Error(ws_error) => {
