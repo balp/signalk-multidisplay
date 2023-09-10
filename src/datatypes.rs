@@ -5,7 +5,6 @@
 //  AWS           | Apparent Wind Speed                     | + self.environment.wind.speedApparent
 //  BAR           | Barometer                               | + self.environment.outside.pressure
 //  BAT           | Battery voltage                         | self.electrical.batteries.house.voltage
-//  BSP           | Boat Speed aka Speed Through Water      | + self.navigation.speedThroughWater
 //  BTW           | Direction from location to designation  | self.navigation.course.nextPoint.bearingTrue
 //  COG           | Course over ground                      | + self.navigation.courseOverGroundTrue
 //  CTS           | Course to steer                         | ??
@@ -26,6 +25,7 @@
 //  RUD           | Rudder angle                            | self.steering.rudderAngle
 //  SEA           | Temperature of sea water                | + self.environment.outside.temperature
 //  SOG           | Speed over ground                       | + self.navigation.speedOverGround
+//  STW           | Boat Speed aka Speed Through Water      | + self.navigation.speedThroughWater
 //  STR           | The steep pilot                         | ??
 //  TRP           | A running tally of distance travel since last reset | self.navigation.trip.log
 //  TWA           | True wind angle from bow                | self.environment.wind.angleTrueGround

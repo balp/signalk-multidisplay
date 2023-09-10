@@ -76,6 +76,7 @@ impl DataUnit for SpeedUnit {
 pub enum AngularUnit {
     Radians,
     Degrees,
+    Mil,
 }
 
 impl DataUnit for AngularUnit {
@@ -83,6 +84,7 @@ impl DataUnit for AngularUnit {
         match self {
             AngularUnit::Radians => "rad".to_string(),
             AngularUnit::Degrees => "deg".to_string(),
+            AngularUnit::Mil => "mil".to_string(),
         }
     }
 
@@ -102,6 +104,7 @@ impl DataUnit for AngularUnit {
                     AngularUnit::Radians,
                     AngularUnit::Radians.abbreviation(),
                 );
+                ui.selectable_value(self, AngularUnit::Mil, AngularUnit::Mil.abbreviation());
             });
     }
 
@@ -113,6 +116,10 @@ impl DataUnit for AngularUnit {
                 }
                 AngularUnit::Degrees => {
                     let display_value = val * 180. / std::f64::consts::PI;
+                    format!("{:>5.0}", display_value)
+                }
+                AngularUnit::Mil => {
+                    let display_value = val * 3200. / std::f64::consts::PI;
                     format!("{:>5.0}", display_value)
                 }
             },
@@ -256,7 +263,7 @@ impl DataUnit for VoltageUnit {
 
     fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         match value {
-            Ok(val) => format!("{:>5.0}", val),
+            Ok(val) => format!("{:>5.1}", val),
             Err(_) => "-----".to_string(),
         }
     }

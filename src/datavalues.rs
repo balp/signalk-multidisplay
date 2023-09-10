@@ -1,9 +1,10 @@
+use datavalue_derive::DataValue;
+use egui::Ui;
+
 use crate::communication::SignalKCommunicator;
 use crate::dataunits::{
     AngularUnit, DataUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit,
 };
-use datavalue_derive::DataValue;
-use egui::Ui;
 
 pub trait DataValue {
     fn name(&self) -> String;
@@ -85,12 +86,41 @@ impl Default for Barometer {
     }
 }
 
-#[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.environment.outside.pressure")]
+#[derive(Debug, PartialEq)]
+// #[data_value(data_path = "self.electrical.batteries.house.voltage")]
 pub struct Battery {
     name: String,
     abbreviation: String,
     display_unit: VoltageUnit,
+    path: String,
+}
+
+impl DataValue for Battery {
+    fn name(&self) -> String {
+        self.name.to_string()
+    }
+
+    fn unit_name(&self) -> String {
+        self.display_unit.abbreviation()
+    }
+
+    fn abbreviation(&self) -> String {
+        self.abbreviation.to_string()
+    }
+
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        let Self { path, .. } = self;
+        ui.vertical(|ui| {
+            ui.label("Battery path: ");
+            ui.text_edit_singleline(path);
+        });
+        self.display_unit.add_config(index, ui);
+    }
+
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let temp = communicator.get_f64_for_path(self.path.clone());
+        self.display_unit.format(temp)
+    }
 }
 
 impl Default for Battery {
@@ -99,6 +129,7 @@ impl Default for Battery {
             name: "Battery".to_string(),
             abbreviation: "BAT".to_string(),
             display_unit: VoltageUnit::Volt,
+            path: "self.electrical.batteries.house.voltage".to_string(),
         }
     }
 }
