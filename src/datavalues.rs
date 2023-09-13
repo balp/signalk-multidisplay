@@ -3,7 +3,7 @@ use egui::Ui;
 
 use crate::communication::SignalKCommunicator;
 use crate::dataunits::{
-    AngularUnit, DataUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit,
+    AngularUnit, DataUnit, DistanceUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit,
 };
 
 pub trait DataValue {
@@ -130,6 +130,42 @@ impl Default for Battery {
             abbreviation: "BAT".to_string(),
             display_unit: VoltageUnit::Volt,
             path: "self.electrical.batteries.house.voltage".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.course.nextPoint.bearingTrue")]
+pub struct BearingTrue {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for BearingTrue {
+    fn default() -> Self {
+        Self {
+            name: "Bearing True".to_string(),
+            abbreviation: "BTW".to_string(),
+            display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.log")]
+pub struct DistanceTraveled {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for DistanceTraveled {
+    fn default() -> Self {
+        Self {
+            name: "Distance traveled".to_string(),
+            abbreviation: "DIS".to_string(),
+            display_unit: DistanceUnit::NauticalMile,
         }
     }
 }

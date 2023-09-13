@@ -12,7 +12,7 @@
 //  DPT           | Depth of water                          | self.environment.depth.belowSurface
 //  DRF           | Speed of current                        | self.environment.current.drift
 //  DTW           | Distance to waypoint                    | self.navigation.course.nextPoint.distance
-//  ELV           | Altitude                                | self.navigation.position.alittude
+//  ELV           | Altitude                                | self.navigation.position.altitude
 //  ERR           | Error of current position               | ??
 //  GWD           | Direction of wind relative ground       | self.environment.wind.directionTrue
 //  GWS           | Speed of wind relative ground           | self.environment.wind.speedOverGround
@@ -38,8 +38,9 @@
 
 use crate::communication::SignalKCommunicator;
 use crate::datavalues::{
-    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery, CourseOverGround,
-    DataValue, SpeedOverGround, SpeedThroughWater, WaterTemperature,
+    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery, BearingTrue,
+    CourseOverGround, DataValue, DistanceTraveled, SpeedOverGround, SpeedThroughWater,
+    WaterTemperature,
 };
 use egui::Ui;
 
@@ -50,9 +51,11 @@ pub enum DataValues {
     ApparentWindSpeed(ApparentWindSpeed),
     Barometer(Barometer),
     Battery(Battery),
+    BearingTrue(BearingTrue),
+    DistanceTraveled(DistanceTraveled),
+    CourseOverGround(CourseOverGround),
     SpeedThroughWater(SpeedThroughWater),
     SpeedOverGround(SpeedOverGround),
-    CourseOverGround(CourseOverGround),
     WaterTemperature(WaterTemperature),
 }
 
@@ -68,6 +71,8 @@ impl DataValues {
             DataValues::ApparentWindSpeed(value) => value.abbreviation(),
             DataValues::Barometer(value) => value.abbreviation(),
             DataValues::Battery(value) => value.abbreviation(),
+            DataValues::BearingTrue(value) => value.abbreviation(),
+            DataValues::DistanceTraveled(value) => value.abbreviation(),
         }
     }
 
@@ -82,6 +87,8 @@ impl DataValues {
             DataValues::ApparentWindSpeed(value) => value.add_config(index, ui),
             DataValues::Barometer(value) => value.add_config(index, ui),
             DataValues::Battery(value) => value.add_config(index, ui),
+            DataValues::BearingTrue(value) => value.add_config(index, ui),
+            DataValues::DistanceTraveled(value) => value.add_config(index, ui),
         }
     }
 
@@ -96,6 +103,8 @@ impl DataValues {
             DataValues::ApparentWindSpeed(value) => value.fmt_value(communicator),
             DataValues::Barometer(value) => value.fmt_value(communicator),
             DataValues::Battery(value) => value.fmt_value(communicator),
+            DataValues::BearingTrue(value) => value.fmt_value(communicator),
+            DataValues::DistanceTraveled(value) => value.fmt_value(communicator),
         }
     }
 
@@ -110,6 +119,8 @@ impl DataValues {
             DataValues::ApparentWindSpeed(value) => value.name(),
             DataValues::Barometer(value) => value.name(),
             DataValues::Battery(value) => value.name(),
+            DataValues::BearingTrue(value) => value.name(),
+            DataValues::DistanceTraveled(value) => value.name(),
         }
     }
 
@@ -124,6 +135,8 @@ impl DataValues {
             DataValues::ApparentWindSpeed(value) => value.unit_name(),
             DataValues::Barometer(value) => value.unit_name(),
             DataValues::Battery(value) => value.unit_name(),
+            DataValues::BearingTrue(value) => value.unit_name(),
+            DataValues::DistanceTraveled(value) => value.unit_name(),
         }
     }
 
@@ -145,6 +158,12 @@ impl DataValues {
         );
         ui.selectable_value(self, DataValues::Barometer(Barometer::default()), "BAR");
         ui.selectable_value(self, DataValues::Battery(Battery::default()), "BAT");
+        ui.selectable_value(self, DataValues::BearingTrue(BearingTrue::default()), "BTW");
+        ui.selectable_value(
+            self,
+            DataValues::DistanceTraveled(DistanceTraveled::default()),
+            "DIS",
+        );
         ui.selectable_value(
             self,
             DataValues::CourseOverGround(CourseOverGround::default()),

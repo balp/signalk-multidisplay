@@ -129,6 +129,77 @@ impl DataUnit for AngularUnit {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum DistanceUnit {
+    Meters,
+    NauticalMile,
+    CableLength,
+    Fathom,
+}
+
+impl DataUnit for DistanceUnit {
+    fn abbreviation(&self) -> String {
+        match self {
+            DistanceUnit::Meters => "m".to_string(),
+            DistanceUnit::NauticalMile => "nm".to_string(),
+            DistanceUnit::CableLength => "cl".to_string(),
+            DistanceUnit::Fathom => "fm".to_string(),
+        }
+    }
+
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        egui::ComboBox::new(format!("data_type_{}", index), "Unit")
+            .selected_text(self.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap = Some(false);
+                ui.set_min_width(60.0);
+                ui.selectable_value(
+                    self,
+                    DistanceUnit::Meters,
+                    DistanceUnit::Meters.abbreviation(),
+                );
+                ui.selectable_value(
+                    self,
+                    DistanceUnit::NauticalMile,
+                    DistanceUnit::NauticalMile.abbreviation(),
+                );
+                ui.selectable_value(
+                    self,
+                    DistanceUnit::CableLength,
+                    DistanceUnit::CableLength.abbreviation(),
+                );
+                ui.selectable_value(
+                    self,
+                    DistanceUnit::Fathom,
+                    DistanceUnit::Fathom.abbreviation(),
+                );
+            });
+    }
+
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+        match value {
+            Ok(val) => match self {
+                DistanceUnit::Meters => {
+                    format!("{:>5.1}", val)
+                }
+                DistanceUnit::NauticalMile => {
+                    let display_value = val * 1852.;
+                    format!("{:>5.1}", display_value)
+                }
+                DistanceUnit::CableLength => {
+                    let display_value = val * 185.2;
+                    format!("{:>5.1}", display_value)
+                }
+                DistanceUnit::Fathom => {
+                    let display_value = val * 1.8288;
+                    format!("{:>5.1}", display_value)
+                }
+            },
+            Err(_) => "-----".to_owned(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum TemperatureUnit {
     Celsius,
     Fahrenheit,

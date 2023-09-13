@@ -3,7 +3,6 @@ use proc_macro::{self, TokenStream};
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-
 #[derive(FromDeriveInput, Default)]
 #[darling(default, attributes(data_value))]
 struct DataValueOptions {
@@ -47,4 +46,3 @@ pub fn dv_derive(input: TokenStream) -> TokenStream {
     };
     output.into()
 }
-
