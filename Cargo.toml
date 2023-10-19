@@ -10,8 +10,8 @@ readme = "README.md"
 homepage = "https://balp.github.io/signalk-multidisplay/"
 repository = "https://github.com/balp/signalk-multidisplay"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-#[lib]
-#crate-type = ["cdylib", "rlib"]
+[lib]
+crate-type = ["cdylib", "rlib"]
 exclude = [
     ".idea/*",
     ".github/*",
@@ -33,6 +33,7 @@ ewebsock = { version = "0.2", features = ["tls"] }
 ehttp = "0.3"
 serde_json = "1.0"
 datavalue_derive = { version = "0.1.0", path = "datavalue_derive" }
+web-time = "0.2.2"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
