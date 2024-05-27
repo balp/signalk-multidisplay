@@ -169,7 +169,8 @@ impl SignalKCommunicator {
         let ctx_clone = ctx.clone();
         log::info!("Connect to websocket url: {}", ws_url);
         let wakeup = move || ctx_clone.request_repaint();
-        match ewebsock::connect_with_wakeup(&ws_url, wakeup) {
+        let options = ewebsock::Options::default();
+        match ewebsock::connect_with_wakeup(&ws_url, options, wakeup) {
             Ok((_ws_sender, ws_receiver)) => {
                 log::debug!("Websocket connected ok!");
                 self.ws_handler = Some(WebsocketHandler { ws_receiver });

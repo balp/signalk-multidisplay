@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::egui::Vec2;
+use egui::ViewportBuilder;
 
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
@@ -10,11 +11,10 @@ async fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let full_screen = cfg!(target_os = "linux");
     let native_options = eframe::NativeOptions {
-        min_window_size: Some(Vec2::new(800., 480.)),
-        max_window_size: Some(Vec2::new(800., 480.)),
-        initial_window_size: Some(Vec2::new(800., 480.)),
-        maximized: full_screen,
-        fullscreen: full_screen,
+        viewport: ViewportBuilder::default()
+            .with_min_inner_size([800.,480.])
+            .with_fullscreen(full_screen)
+            .with_maximized(full_screen),
         ..Default::default()
     };
 

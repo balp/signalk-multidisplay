@@ -22,22 +22,22 @@ exclude = [
 [dependencies]
 log = "0.4"
 signalk = "0.3.4"
-egui = "0.22"
-eframe = { version = "0.22", default-features = false, features = [
+egui = "0.27"
+eframe = { version = "0.27", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
 ] }
 serde = { version = "1", features = ["derive"] }
-ewebsock = { version = "0.2", features = ["tls"] }
-ehttp = "0.3"
+ewebsock = { version = "0.6", features = ["tls"] }
+ehttp = "0.5"
 serde_json = "1.0"
 datavalue_derive = { version = "0.1.0", path = "datavalue_derive" }
-web-time = "0.2.2"
+web-time = "1.1"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.10"
+env_logger = "0.11"
 tokio = { version = "1.29", features = ["macros", "rt-multi-thread"] }
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
