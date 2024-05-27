@@ -2,7 +2,6 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use web_time::{Duration, Instant};
 
 use eframe::egui;
-use egui::ViewportCommand;
 
 use crate::communication::SignalKCommunicator;
 use crate::layouts::LayoutComponent;
@@ -139,6 +138,8 @@ impl eframe::App for DisplayApplication {
                     }
                     #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                     if ui.button("Quit").clicked() {
+                        use egui::ViewportCommand;
+
                         ctx.send_viewport_cmd(ViewportCommand::Close)
                     }
                 });
