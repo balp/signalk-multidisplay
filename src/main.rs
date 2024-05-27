@@ -1,13 +1,12 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use eframe::egui::Vec2;
-use egui::ViewportBuilder;
-
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() -> eframe::Result<()> {
+    use egui::ViewportBuilder;
+
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let full_screen = cfg!(target_os = "linux");
     let native_options = eframe::NativeOptions {
