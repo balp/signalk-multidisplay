@@ -11,7 +11,7 @@ async fn main() -> eframe::Result<()> {
     let full_screen = cfg!(target_os = "linux");
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
-            .with_min_inner_size([800.,480.])
+            .with_min_inner_size([800., 480.])
             .with_fullscreen(full_screen)
             .with_maximized(full_screen),
         ..Default::default()

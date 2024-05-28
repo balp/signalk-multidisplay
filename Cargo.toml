@@ -10,14 +10,8 @@ readme = "README.md"
 homepage = "https://balp.github.io/signalk-multidisplay/"
 repository = "https://github.com/balp/signalk-multidisplay"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-crate-type = ["cdylib", "rlib"]
-exclude = [
-    ".idea/*",
-    ".github/*",
-    "dev_scripts/*",
-    "home_page/*",
-]
+# [lib]
+# crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 log = "0.4"
