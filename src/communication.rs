@@ -133,7 +133,7 @@ impl SignalKCommunicator {
                     self.set_discovery(ctx, discovery);
                 }
                 Err(_) => {
-                    log::error!("Unable to recv discovery data");
+                    log::info!("Unable to recv discovery data");
                 }
             }
         }
