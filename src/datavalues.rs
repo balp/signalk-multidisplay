@@ -171,6 +171,150 @@ impl Default for DistanceTraveled {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.depth.belowSurface")]
+pub struct DepthOfWater {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for DepthOfWater {
+    fn default() -> Self {
+        Self {
+            name: "Depth Of Water".to_string(),
+            abbreviation: "DPT".to_string(),
+            display_unit: DistanceUnit::Meters,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.current.drift")]
+pub struct SpeedOfCurrent {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl Default for SpeedOfCurrent {
+    fn default() -> Self {
+        Self {
+            name: "Speed of current".to_string(),
+            abbreviation: "DRF".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.course.nextPoint.distance")]
+pub struct DistanceToWaypoint {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for DistanceToWaypoint {
+    fn default() -> Self {
+        Self {
+            name: "Distance To Waypoint".to_string(),
+            abbreviation: "DTW".to_string(),
+            display_unit: DistanceUnit::NauticalMile,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.position.altitude")]
+pub struct Altitude {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for Altitude {
+    fn default() -> Self {
+        Self {
+            name: "Altitude".to_string(),
+            abbreviation: "ELV".to_string(),
+            display_unit: DistanceUnit::Meters,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.wind.speedOverGround")]
+pub struct DirectionOfWindRelativeGround {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for DirectionOfWindRelativeGround {
+    fn default() -> Self {
+        Self {
+            name: "Direction Of Wind Relative Ground".to_string(),
+            abbreviation: "GWD".to_string(),
+            display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.headingTrue")]
+pub struct HeadingTrue {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for HeadingTrue {
+    fn default() -> Self {
+        Self {
+            name: "The direction the boat points".to_string(),
+            abbreviation: "HDG".to_string(),
+            display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.log")]
+pub struct Odometer {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for Odometer {
+    fn default() -> Self {
+        Self {
+            name: "Running tally of distance".to_string(),
+            abbreviation: "ODO".to_string(),
+            display_unit: DistanceUnit::NauticalMile,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.wind.directionTrue")]
+pub struct SpeedOfWindRelativeGround {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl Default for SpeedOfWindRelativeGround {
+    fn default() -> Self {
+        Self {
+            name: "Speed Of Wind Relative Ground".to_string(),
+            abbreviation: "GWS".to_string(),
+            display_unit: SpeedUnit::MeterPerSecond,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
 #[data_value(data_path = "self.navigation.speedThroughWater")]
 pub struct SpeedThroughWater {
     name: String,

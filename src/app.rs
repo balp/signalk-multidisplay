@@ -191,7 +191,7 @@ impl eframe::App for DisplayApplication {
         // log::debug!("TemplateApp::update() - Exit");
     }
 
-    /// Called by the frame work to save state before shutdown.
+    /// Called by the framework to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }

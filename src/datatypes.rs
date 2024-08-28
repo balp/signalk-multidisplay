@@ -4,20 +4,20 @@
 //  AWA           | Apparent Wind Angle                     | + self.environment.wind.angleApparent
 //  AWS           | Apparent Wind Speed                     | + self.environment.wind.speedApparent
 //  BAR           | Barometer                               | + self.environment.outside.pressure
-//  BAT           | Battery voltage                         | self.electrical.batteries.house.voltage
-//  BTW           | Direction from location to designation  | self.navigation.course.nextPoint.bearingTrue
+//  BAT           | Battery voltage                         | + self.electrical.batteries.house.voltage
+//  BTW           | Direction from location to designation  | + self.navigation.course.nextPoint.bearingTrue
 //  COG           | Course over ground                      | + self.navigation.courseOverGroundTrue
 //  CTS           | Course to steer                         | ??
-//  DIS           | Distance traveled                       | self.navigation.log ??
-//  DPT           | Depth of water                          | self.environment.depth.belowSurface
-//  DRF           | Speed of current                        | self.environment.current.drift
-//  DTW           | Distance to waypoint                    | self.navigation.course.nextPoint.distance
-//  ELV           | Altitude                                | self.navigation.position.altitude
+//  DIS           | Distance traveled                       | + self.navigation.log ??
+//  DPT           | Depth of water                          | + self.environment.depth.belowSurface
+//  DRF           | Speed of current                        | + self.environment.current.drift
+//  DTW           | Distance to waypoint                    | + self.navigation.course.nextPoint.distance
+//  ELV           | Altitude                                | + self.navigation.position.altitude
 //  ERR           | Error of current position               | ??
-//  GWD           | Direction of wind relative ground       | self.environment.wind.directionTrue
-//  GWS           | Speed of wind relative ground           | self.environment.wind.speedOverGround
-//  HDG           | The direction the boat points           | self.navigation.headingTrue
-//  ODO           | Running tally of distance               | self.navigation.log ??
+//  GWD           | Direction of wind relative ground       | + self.environment.wind.directionTrue
+//  GWS           | Speed of wind relative ground           | + self.environment.wind.speedOverGround
+//  HDG           | The direction the boat points           | + self.navigation.headingTrue
+//  ODO           | Running tally of distance               | + self.navigation.log ??
 //  OTH           | Opposite track direction                | ??
 //  POS           | Current position                        | self.navigation.position
 //  RACE          | Race-timer                              | ??
@@ -38,9 +38,10 @@
 
 use crate::communication::SignalKCommunicator;
 use crate::datavalues::{
-    AirTemperature, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery, BearingTrue,
-    CourseOverGround, DataValue, DistanceTraveled, SpeedOverGround, SpeedThroughWater,
-    WaterTemperature,
+    AirTemperature, Altitude, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery,
+    BearingTrue, CourseOverGround, DataValue, DepthOfWater, DirectionOfWindRelativeGround,
+    DistanceToWaypoint, DistanceTraveled, HeadingTrue, Odometer, SpeedOfCurrent,
+    SpeedOfWindRelativeGround, SpeedOverGround, SpeedThroughWater, WaterTemperature,
 };
 use egui::Ui;
 
@@ -53,10 +54,18 @@ pub enum DataValues {
     Battery(Battery),
     BearingTrue(BearingTrue),
     DistanceTraveled(DistanceTraveled),
+    DepthOfWater(DepthOfWater),
+    DistanceToWaypoint(DistanceToWaypoint),
+    Altitude(Altitude),
+    SpeedOfCurrent(SpeedOfCurrent),
     CourseOverGround(CourseOverGround),
     SpeedThroughWater(SpeedThroughWater),
     SpeedOverGround(SpeedOverGround),
     WaterTemperature(WaterTemperature),
+    DirectionOfWindRelativeGround(DirectionOfWindRelativeGround),
+    SpeedOfWindRelativeGround(SpeedOfWindRelativeGround),
+    HeadingTrue(HeadingTrue),
+    Odometer(Odometer),
 }
 
 impl DataValues {
@@ -73,6 +82,14 @@ impl DataValues {
             DataValues::Battery(value) => value.abbreviation(),
             DataValues::BearingTrue(value) => value.abbreviation(),
             DataValues::DistanceTraveled(value) => value.abbreviation(),
+            DataValues::DepthOfWater(value) => value.abbreviation(),
+            DataValues::SpeedOfCurrent(value) => value.abbreviation(),
+            DataValues::DistanceToWaypoint(value) => value.abbreviation(),
+            DataValues::Altitude(value) => value.abbreviation(),
+            DataValues::DirectionOfWindRelativeGround(value) => value.abbreviation(),
+            DataValues::SpeedOfWindRelativeGround(value) => value.abbreviation(),
+            DataValues::HeadingTrue(value) => value.abbreviation(),
+            DataValues::Odometer(value) => value.abbreviation(),
         }
     }
 
@@ -89,6 +106,14 @@ impl DataValues {
             DataValues::Battery(value) => value.add_config(index, ui),
             DataValues::BearingTrue(value) => value.add_config(index, ui),
             DataValues::DistanceTraveled(value) => value.add_config(index, ui),
+            DataValues::DepthOfWater(value) => value.add_config(index, ui),
+            DataValues::SpeedOfCurrent(value) => value.add_config(index, ui),
+            DataValues::DistanceToWaypoint(value) => value.add_config(index, ui),
+            DataValues::Altitude(value) => value.add_config(index, ui),
+            DataValues::DirectionOfWindRelativeGround(value) => value.add_config(index, ui),
+            DataValues::SpeedOfWindRelativeGround(value) => value.add_config(index, ui),
+            DataValues::HeadingTrue(value) => value.add_config(index, ui),
+            DataValues::Odometer(value) => value.add_config(index, ui),
         }
     }
 
@@ -105,6 +130,14 @@ impl DataValues {
             DataValues::Battery(value) => value.fmt_value(communicator),
             DataValues::BearingTrue(value) => value.fmt_value(communicator),
             DataValues::DistanceTraveled(value) => value.fmt_value(communicator),
+            DataValues::DepthOfWater(value) => value.fmt_value(communicator),
+            DataValues::SpeedOfCurrent(value) => value.fmt_value(communicator),
+            DataValues::DistanceToWaypoint(value) => value.fmt_value(communicator),
+            DataValues::Altitude(value) => value.fmt_value(communicator),
+            DataValues::DirectionOfWindRelativeGround(value) => value.fmt_value(communicator),
+            DataValues::SpeedOfWindRelativeGround(value) => value.fmt_value(communicator),
+            DataValues::HeadingTrue(value) => value.fmt_value(communicator),
+            DataValues::Odometer(value) => value.fmt_value(communicator),
         }
     }
 
@@ -121,6 +154,14 @@ impl DataValues {
             DataValues::Battery(value) => value.name(),
             DataValues::BearingTrue(value) => value.name(),
             DataValues::DistanceTraveled(value) => value.name(),
+            DataValues::DepthOfWater(value) => value.name(),
+            DataValues::SpeedOfCurrent(value) => value.name(),
+            DataValues::DistanceToWaypoint(value) => value.name(),
+            DataValues::Altitude(value) => value.name(),
+            DataValues::DirectionOfWindRelativeGround(value) => value.name(),
+            DataValues::SpeedOfWindRelativeGround(value) => value.name(),
+            DataValues::HeadingTrue(value) => value.name(),
+            DataValues::Odometer(value) => value.name(),
         }
     }
 
@@ -137,6 +178,14 @@ impl DataValues {
             DataValues::Battery(value) => value.unit_name(),
             DataValues::BearingTrue(value) => value.unit_name(),
             DataValues::DistanceTraveled(value) => value.unit_name(),
+            DataValues::DepthOfWater(value) => value.unit_name(),
+            DataValues::SpeedOfCurrent(value) => value.unit_name(),
+            DataValues::DistanceToWaypoint(value) => value.unit_name(),
+            DataValues::Altitude(value) => value.unit_name(),
+            DataValues::DirectionOfWindRelativeGround(value) => value.unit_name(),
+            DataValues::SpeedOfWindRelativeGround(value) => value.unit_name(),
+            DataValues::HeadingTrue(value) => value.unit_name(),
+            DataValues::Odometer(value) => value.unit_name(),
         }
     }
 
@@ -166,6 +215,11 @@ impl DataValues {
         );
         ui.selectable_value(
             self,
+            DataValues::DepthOfWater(DepthOfWater::default()),
+            "DPT",
+        );
+        ui.selectable_value(
+            self,
             DataValues::CourseOverGround(CourseOverGround::default()),
             "COG",
         );
@@ -174,6 +228,29 @@ impl DataValues {
             DataValues::SpeedOverGround(SpeedOverGround::default()),
             "SOG",
         );
+        ui.selectable_value(
+            self,
+            DataValues::SpeedOfCurrent(SpeedOfCurrent::default()),
+            "DRF",
+        );
+        ui.selectable_value(
+            self,
+            DataValues::DistanceToWaypoint(DistanceToWaypoint::default()),
+            "DTW",
+        );
+        ui.selectable_value(self, DataValues::Altitude(Altitude::default()), "ELV");
+        ui.selectable_value(
+            self,
+            DataValues::DirectionOfWindRelativeGround(DirectionOfWindRelativeGround::default()),
+            "GWD",
+        );
+        ui.selectable_value(
+            self,
+            DataValues::SpeedOfWindRelativeGround(SpeedOfWindRelativeGround::default()),
+            "GWS",
+        );
+        ui.selectable_value(self, DataValues::HeadingTrue(HeadingTrue::default()), "HDG");
+        ui.selectable_value(self, DataValues::Odometer(Odometer::default()), "ODO");
         ui.selectable_value(
             self,
             DataValues::SpeedThroughWater(SpeedThroughWater::default()),
