@@ -61,7 +61,7 @@ impl WebsocketHandler {
 
 #[derive(Default)]
 pub struct SignalKCommunicator {
-    signalk_data: Option<Storage>,
+    pub(crate) signalk_data: Option<Storage>,
     signalk_discovery: Option<V1Discovery>,
     discovery_rx: Option<Receiver<V1Discovery>>,
     full_rx: Option<Receiver<V1FullFormat>>,

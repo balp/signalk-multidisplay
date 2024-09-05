@@ -41,7 +41,7 @@ use crate::datavalues::{
     AirTemperature, Altitude, ApparentWindAngle, ApparentWindSpeed, Barometer, Battery,
     BearingTrue, CourseOverGround, DataValue, DepthOfWater, DirectionOfWindRelativeGround,
     DistanceToWaypoint, DistanceTraveled, HeadingTrue, Odometer, SpeedOfCurrent,
-    SpeedOfWindRelativeGround, SpeedOverGround, SpeedThroughWater, WaterTemperature,
+    SpeedOfWindRelativeGround, SpeedOverGround, SpeedThroughWater, WaterTemperature, Position,
 };
 use egui::Ui;
 
@@ -66,6 +66,7 @@ pub enum DataValues {
     SpeedOfWindRelativeGround(SpeedOfWindRelativeGround),
     HeadingTrue(HeadingTrue),
     Odometer(Odometer),
+    Position(Position)
 }
 
 impl DataValues {
@@ -90,6 +91,7 @@ impl DataValues {
             DataValues::SpeedOfWindRelativeGround(value) => value.abbreviation(),
             DataValues::HeadingTrue(value) => value.abbreviation(),
             DataValues::Odometer(value) => value.abbreviation(),
+            DataValues::Position(value) => value.abbreviation(),
         }
     }
 
@@ -114,6 +116,7 @@ impl DataValues {
             DataValues::SpeedOfWindRelativeGround(value) => value.add_config(index, ui),
             DataValues::HeadingTrue(value) => value.add_config(index, ui),
             DataValues::Odometer(value) => value.add_config(index, ui),
+            DataValues::Position(value) => value.add_config(index, ui),
         }
     }
 
@@ -138,6 +141,7 @@ impl DataValues {
             DataValues::SpeedOfWindRelativeGround(value) => value.fmt_value(communicator),
             DataValues::HeadingTrue(value) => value.fmt_value(communicator),
             DataValues::Odometer(value) => value.fmt_value(communicator),
+            DataValues::Position(value) => value.fmt_position(communicator),
         }
     }
 
@@ -162,6 +166,7 @@ impl DataValues {
             DataValues::SpeedOfWindRelativeGround(value) => value.name(),
             DataValues::HeadingTrue(value) => value.name(),
             DataValues::Odometer(value) => value.name(),
+            DataValues::Position(value) => value.name(),
         }
     }
 
@@ -186,6 +191,7 @@ impl DataValues {
             DataValues::SpeedOfWindRelativeGround(value) => value.unit_name(),
             DataValues::HeadingTrue(value) => value.unit_name(),
             DataValues::Odometer(value) => value.unit_name(),
+            DataValues::Position(value) => value.unit_name(),
         }
     }
 
@@ -251,6 +257,7 @@ impl DataValues {
         );
         ui.selectable_value(self, DataValues::HeadingTrue(HeadingTrue::default()), "HDG");
         ui.selectable_value(self, DataValues::Odometer(Odometer::default()), "ODO");
+        ui.selectable_value(self, DataValues::Position(Position::default()), "POS");
         ui.selectable_value(
             self,
             DataValues::SpeedThroughWater(SpeedThroughWater::default()),

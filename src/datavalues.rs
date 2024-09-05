@@ -3,7 +3,7 @@ use egui::Ui;
 
 use crate::communication::SignalKCommunicator;
 use crate::dataunits::{
-    AngularUnit, DataUnit, DistanceUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit,
+    AngularUnit, DataUnit, DistanceUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit, PositionUnit
 };
 
 pub trait DataValue {
@@ -292,6 +292,36 @@ impl Default for Odometer {
             name: "Running tally of distance".to_string(),
             abbreviation: "ODO".to_string(),
             display_unit: DistanceUnit::NauticalMile,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.log")]
+pub struct Position {
+    name: String,
+    abbreviation: String,
+    display_unit: PositionUnit,
+}
+impl Position {
+    pub fn fmt_position(&self, communicator: &SignalKCommunicator) -> String {
+        if let Some(ref storage) = communicator.signalk_data {
+            let sk_data = storage.get();
+            if let Some(vessel) = sk_data.get_self() {
+                if let Some(navigation) = &vessel.navigation {
+                    return self.display_unit.format_pos(&navigation.position);
+                }
+            }
+        }
+        "--.---\n--.---".to_string()
+    }
+}
+impl Default for Position {
+    fn default() -> Self {
+        Self {
+            name: "Current Position".to_string(),
+            abbreviation: "POS".to_string(),
+            display_unit: PositionUnit::DecimalDegrees,
         }
     }
 }
