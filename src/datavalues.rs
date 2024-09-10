@@ -3,7 +3,8 @@ use egui::Ui;
 
 use crate::communication::SignalKCommunicator;
 use crate::dataunits::{
-    AngularUnit, DataUnit, DistanceUnit, PressureUnit, SpeedUnit, TemperatureUnit, VoltageUnit, PositionUnit
+    AngularUnit, DataUnit, DateTimeUnit, DistanceUnit, PositionUnit, PressureUnit, SpeedUnit,
+    TemperatureUnit, VoltageUnit,
 };
 
 pub trait DataValue {
@@ -297,6 +298,60 @@ impl Default for Odometer {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.position")]
+pub struct Trip {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for Trip {
+    fn default() -> Self {
+        Self {
+            name: "A running tally of distance travel since last reset".to_string(),
+            abbreviation: "TRP".to_string(),
+            display_unit: DistanceUnit::NauticalMile,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.wind.angleTrueGround")]
+pub struct TrueWindAngleFromBow {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for crate::datavalues::TrueWindAngleFromBow {
+    fn default() -> Self {
+        Self {
+            name: "True wind angle from bow".to_string(),
+            abbreviation: "TWA".to_string(),
+            display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.environment.wind.directionTrue")]
+pub struct TrueWindDirectionRelNorth {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for crate::datavalues::TrueWindDirectionRelNorth {
+    fn default() -> Self {
+        Self {
+            name: "True wind direction rel north".to_string(),
+            abbreviation: "TWD".to_string(),
+            display_unit: AngularUnit::Degrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
 #[data_value(data_path = "self.navigation.log")]
 pub struct Position {
     name: String,
@@ -316,12 +371,31 @@ impl Position {
         "--.---\n--.---".to_string()
     }
 }
+
 impl Default for Position {
     fn default() -> Self {
         Self {
             name: "Current Position".to_string(),
             abbreviation: "POS".to_string(),
             display_unit: PositionUnit::DecimalDegrees,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.steering.rudderAngle")]
+pub struct RudderAngle {
+    name: String,
+    abbreviation: String,
+    display_unit: AngularUnit,
+}
+
+impl Default for crate::datavalues::RudderAngle {
+    fn default() -> Self {
+        Self {
+            name: "Rudder angle".to_string(),
+            abbreviation: "RUD".to_string(),
+            display_unit: AngularUnit::Degrees,
         }
     }
 }
@@ -357,6 +431,24 @@ impl Default for SpeedThroughWater {
         Self {
             name: "Water Speed".to_string(),
             abbreviation: "STW".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.speedThroughWater")]
+pub struct TrueWindSpeed {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl Default for TrueWindSpeed {
+    fn default() -> Self {
+        Self {
+            name: "True wind speed relative vessel".to_string(),
+            abbreviation: "TWS".to_string(),
             display_unit: SpeedUnit::Knot,
         }
     }
@@ -413,5 +505,83 @@ impl Default for WaterTemperature {
             abbreviation: "SEA".to_string(),
             display_unit: TemperatureUnit::Celsius,
         }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.course.nextPoint.velocityMadeGood")]
+pub struct VelocityMadeGood {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl Default for VelocityMadeGood {
+    fn default() -> Self {
+        Self {
+            name: "Velocity made good".to_string(),
+            abbreviation: "VMG".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.course.nextPoint.velocityMadeGood")]
+pub struct VelocityMadeGoodUpwind {
+    name: String,
+    abbreviation: String,
+    display_unit: SpeedUnit,
+}
+
+impl Default for VelocityMadeGoodUpwind {
+    fn default() -> Self {
+        Self {
+            name: "Velocity made good Upwind".to_string(),
+            abbreviation: "WND".to_string(),
+            display_unit: SpeedUnit::Knot,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.course.crossTrackError")]
+pub struct CrossTrackError {
+    name: String,
+    abbreviation: String,
+    display_unit: DistanceUnit,
+}
+
+impl Default for CrossTrackError {
+    fn default() -> Self {
+        Self {
+            name: "Cross track error".to_string(),
+            abbreviation: "XTE".to_string(),
+            display_unit: DistanceUnit::Meters,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DataValue)]
+#[data_value(data_path = "self.navigation.datetime")]
+pub struct UniversalTimeCoordinated {
+    name: String,
+    abbreviation: String,
+    display_unit: DateTimeUnit,
+}
+
+impl Default for UniversalTimeCoordinated {
+    fn default() -> Self {
+        Self {
+            name: "Universal time coordinated".to_string(),
+            abbreviation: "UTC".to_string(),
+            display_unit: DateTimeUnit::Default,
+        }
+    }
+}
+
+impl crate::datavalues::UniversalTimeCoordinated {
+    pub fn fmt_time(&self, communicator: &SignalKCommunicator) -> String {
+        "hh:mm:ss".to_string()
     }
 }

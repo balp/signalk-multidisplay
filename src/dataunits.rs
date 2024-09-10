@@ -352,7 +352,11 @@ impl PositionUnit {
             match self {
                 PositionUnit::DecimalDegrees => {
                     // Decimal degrees (DD): 41.40338, 2.17403
-                    format!("{:<10.6}\n{:<10.6}", position.value.latitude, position.value.longitude).to_string()
+                    format!(
+                        "{:<10.6}\n{:<10.6}",
+                        position.value.latitude, position.value.longitude
+                    )
+                    .to_string()
                 }
                 PositionUnit::DegreesMinutesSeconds => {
                     // Degrees, minutes, and seconds (DMS): 41°24'12.2"N 2°10'26.5"E
@@ -360,33 +364,51 @@ impl PositionUnit {
                     let lat_minutes = (position.value.latitude.fract() * 60.0);
                     let lat_min = lat_minutes.trunc();
                     let lat_sec = lat_minutes.fract() * 60.0;
-                    let lat_axel = if position.value.latitude > 0.0 { "N" } else { "S" };
+                    let lat_axel = if position.value.latitude > 0.0 {
+                        "N"
+                    } else {
+                        "S"
+                    };
 
                     let lon_deg = position.value.longitude.trunc();
                     let lon_minutes = (position.value.longitude.fract() * 60.0);
                     let lon_min = lon_minutes.trunc();
                     let lon_sec = lon_minutes.fract() * 60.0;
-                    let lon_axel = if position.value.longitude > 0.0 { "E" } else { "W" };;
+                    let lon_axel = if position.value.longitude > 0.0 {
+                        "E"
+                    } else {
+                        "W"
+                    };
 
-                    format!("{:>3.}°{:>2.}'{:>4.1}\"{}\n{:>3.}°{:>2.}'{:>4.1}\"{}",
-                            lat_deg, lat_min, lat_sec, lat_axel,
-                            lon_deg, lon_min, lon_sec, lon_axel,
-                    ).to_string()
+                    format!(
+                        "{:>3.}°{:>2.}'{:>4.1}\"{}\n{:>3.}°{:>2.}'{:>4.1}\"{}",
+                        lat_deg, lat_min, lat_sec, lat_axel, lon_deg, lon_min, lon_sec, lon_axel,
+                    )
+                    .to_string()
                 }
                 PositionUnit::DegreesDecimalMinutes => {
                     // Degrees and decimal minutes (DMM): 41 24.2028, 2 10.4418
                     let lat_deg = position.value.latitude.trunc();
                     let lat_minutes = (position.value.latitude.fract() * 60.0);
-                    let lat_axel = if position.value.latitude > 0.0 { "N" } else { "S" };
+                    let lat_axel = if position.value.latitude > 0.0 {
+                        "N"
+                    } else {
+                        "S"
+                    };
 
                     let lon_deg = position.value.longitude.trunc();
                     let lon_minutes = (position.value.longitude.fract() * 60.0);
-                    let lon_axel = if position.value.longitude > 0.0 { "E" } else { "W" };;
+                    let lon_axel = if position.value.longitude > 0.0 {
+                        "E"
+                    } else {
+                        "W"
+                    };
 
-                    format!("{:>3.} {:>5.3} {}\n{:>3.} {:>5.3} {}",
-                            lat_deg, lat_minutes, lat_axel,
-                            lon_deg, lon_minutes, lon_axel,
-                    ).to_string()
+                    format!(
+                        "{:>3.} {:>5.3} {}\n{:>3.} {:>5.3} {}",
+                        lat_deg, lat_minutes, lat_axel, lon_deg, lon_minutes, lon_axel,
+                    )
+                    .to_string()
                 }
             }
         } else {
@@ -428,8 +450,24 @@ impl DataUnit for PositionUnit {
             });
     }
 
-
     fn format(&self, value: Result<f64, SignalKGetError>) -> String {
         "-----".to_string()
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum DateTimeUnit {
+    Default,
+}
+
+impl DataUnit for crate::dataunits::DateTimeUnit {
+    fn abbreviation(&self) -> String {
+        "".to_string()
+    }
+
+    fn add_config(&mut self, _index: usize, _ui: &mut Ui) {}
+
+    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+        "hh:mm:ss".to_string()
     }
 }
