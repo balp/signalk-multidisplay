@@ -1,40 +1,40 @@
 // Garmins data displays:
 //  Abbreviation    Name
-//  AIR           | Air Temperature                         | + self.environment.outside.temperature
-//  AWA           | Apparent Wind Angle                     | + self.environment.wind.angleApparent
-//  AWS           | Apparent Wind Speed                     | + self.environment.wind.speedApparent
-//  BAR           | Barometer                               | + self.environment.outside.pressure
-//  BAT           | Battery voltage                         | + self.electrical.batteries.house.voltage
-//  BTW           | Direction from location to designation  | + self.navigation.course.nextPoint.bearingTrue
-//  COG           | Course over ground                      | + self.navigation.courseOverGroundTrue
+//  AIR           | Air Temperature                         | *+ self.environment.outside.temperature
+//  AWA           | Apparent Wind Angle                     | *+ self.environment.wind.angleApparent
+//  AWS           | Apparent Wind Speed                     | *+ self.environment.wind.speedApparent
+//  BAR           | Barometer                               | *+ self.environment.outside.pressure
+//  BAT           | Battery voltage                         | *+ self.electrical.batteries.house.voltage
+//  BTW           | Direction from location to designation  | !!+ self.navigation.course.nextPoint.bearingTrue
+//  COG           | Course over ground                      | !!+ self.navigation.courseOverGroundTrue
 //  CTS           | Course to steer                         | ??
-//  DIS           | Distance traveled                       | + self.navigation.log ??
-//  DPT           | Depth of water                          | + self.environment.depth.belowSurface
-//  DRF           | Speed of current                        | + self.environment.current.drift
-//  DTW           | Distance to waypoint                    | + self.navigation.course.nextPoint.distance
-//  ELV           | Altitude                                | + self.navigation.position.altitude
+//  DIS           | Distance traveled                       | *+ self.navigation.log ??
+//  DPT           | Depth of water                          | *+ self.environment.depth.belowSurface
+//  DRF           | Speed of current                        | *+ self.environment.current.drift
+//  DTW           | Distance to waypoint                    | !!+ self.navigation.course.nextPoint.distance
+//  ELV           | Altitude                                | *+ self.navigation.position.altitude
 //  ERR           | Error of current position               | ??
-//  GWD           | Direction of wind relative ground       | + self.environment.wind.directionTrue
-//  GWS           | Speed of wind relative ground           | + self.environment.wind.speedOverGround
-//  HDG           | The direction the boat points           | + self.navigation.headingTrue
-//  ODO           | Running tally of distance               | + self.navigation.log ??
+//  GWD           | Direction of wind relative ground       | *+ self.environment.wind.directionTrue
+//  GWS           | Speed of wind relative ground           | *+ self.environment.wind.speedOverGround
+//  HDG           | The direction the boat points           | *+ self.navigation.headingTrue
+//  ODO           | Running tally of distance               | *+ self.navigation.log ??
 //  OTH           | Opposite track direction                | ??
-//  POS           | Current position                        | + self.navigation.position
+//  POS           | Current position                        | *+ self.navigation.position
 //  RACE          | Race-timer                              | ??
 //  REF           | A steer pilot reference                 | ??
-//  RUD           | Rudder angle                            | + self.steering.rudderAngle
-//  SEA           | Temperature of sea water                | + self.environment.outside.temperature
-//  SOG           | Speed over ground                       | + self.navigation.speedOverGround
-//  STW           | Boat Speed aka Speed Through Water      | + self.navigation.speedThroughWater
+//  RUD           | Rudder angle                            | !!+ self.steering.rudderAngle
+//  SEA           | Temperature of sea water                | *+ self.environment.water.temperature
+//  SOG           | Speed over ground                       | *+ self.navigation.speedOverGround
+//  STW           | Boat Speed aka Speed Through Water      | *+ self.navigation.speedThroughWater
 //  STR           | The steep pilot                         | ??
 //  TRP           | A running tally of distance travel since last reset | +self.navigation.trip.log
-//  TWA           | True wind angle from bow                | +self.environment.wind.angleTrueGround
-//  TWD           | True wind direction rel north           | +self.environment.wind.directionTrue
-//  TWS           | True wind speed relative vessel         | +self.environment.wind.speedTrue
-//  UTC           | Universal time coordinated              | +self.navigation.datetime
-//  VMG           | Speed towards designation               | self.navigation.course.nextPoint.velocityMadeGood
+//  TWA           | True wind angle from bow                | *+self.environment.wind.angleTrueGround
+//  TWD           | True wind direction rel north           | *+self.environment.wind.directionTrue
+//  TWS           | True wind speed relative vessel         | *+self.environment.wind.speedTrue
+//  UTC           | Universal time coordinated              | !!+self.navigation.datetime
+//  VMG           | Speed towards designation               | !!self.navigation.course.nextPoint.velocityMadeGood
 //  WND           | Velocity made good upwind               |
-//  XTE           | Cross track error                       | self.navigation.course.crossTrackError
+//  XTE           | Cross track error                       | !!self.navigation.course.crossTrackError
 
 use crate::communication::SignalKCommunicator;
 use crate::datavalues::{
