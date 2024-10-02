@@ -184,6 +184,8 @@ impl eframe::App for DisplayApplication {
             });
         }
         egui::CentralPanel::default().show(ctx, |ui| {
+            // ui.set_min_width(800.0);
+            // ui.set_min_height(400.0);
             if let Some(ref comm) = self.communicator {
                 layouts[*current_layout].draw_ui(ui, comm);
             }
