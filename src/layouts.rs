@@ -1,4 +1,5 @@
 use eframe::egui;
+use eframe::epaint::text::TextWrapMode;
 use egui::{RichText, Ui};
 
 use crate::communication::SignalKCommunicator;
@@ -56,7 +57,7 @@ impl LayoutComponent for SingleValueLayout {
         egui::ComboBox::new(format!("SingleValueLayout: {}", id), "Value")
             .selected_text(value.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 value.add_config_values(ui);
             });
@@ -122,7 +123,7 @@ impl LayoutComponent for DualValuesLayout {
         egui::ComboBox::new(format!("DualValuesLayout_top_{}", id), "Top Value")
             .selected_text(top_value.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 top_value.add_config_values(ui);
             });
@@ -130,7 +131,7 @@ impl LayoutComponent for DualValuesLayout {
         egui::ComboBox::new(format!("DualValuesLayout_bottom_{}", id), "Bottom Value")
             .selected_text(bottom_value.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 bottom_value.add_config_values(ui);
             });

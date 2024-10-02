@@ -581,7 +581,7 @@ impl Default for UniversalTimeCoordinated {
 }
 
 impl crate::datavalues::UniversalTimeCoordinated {
-    pub fn fmt_time(&self, communicator: &SignalKCommunicator) -> String {
+    pub fn fmt_time(&self, _communicator: &SignalKCommunicator) -> String {
         "hh:mm:ss".to_string()
     }
 }

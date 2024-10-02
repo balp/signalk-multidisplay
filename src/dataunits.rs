@@ -1,3 +1,4 @@
+use eframe::epaint::text::TextWrapMode;
 use egui::Ui;
 use signalk::{SignalKGetError, V1PositionType};
 
@@ -28,7 +29,7 @@ impl DataUnit for SpeedUnit {
         egui::ComboBox::new(format!("data_type_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -92,7 +93,7 @@ impl DataUnit for AngularUnit {
         egui::ComboBox::new(format!("angular_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -150,7 +151,7 @@ impl DataUnit for DistanceUnit {
         egui::ComboBox::new(format!("data_type_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -219,7 +220,7 @@ impl DataUnit for TemperatureUnit {
         egui::ComboBox::new(format!("angular_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -279,7 +280,7 @@ impl DataUnit for PressureUnit {
         egui::ComboBox::new(format!("angular_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -361,7 +362,7 @@ impl PositionUnit {
                 PositionUnit::DegreesMinutesSeconds => {
                     // Degrees, minutes, and seconds (DMS): 41°24'12.2"N 2°10'26.5"E
                     let lat_deg = position.value.latitude.trunc();
-                    let lat_minutes = (position.value.latitude.fract() * 60.0);
+                    let lat_minutes = position.value.latitude.fract() * 60.0;
                     let lat_min = lat_minutes.trunc();
                     let lat_sec = lat_minutes.fract() * 60.0;
                     let lat_axel = if position.value.latitude > 0.0 {
@@ -371,7 +372,7 @@ impl PositionUnit {
                     };
 
                     let lon_deg = position.value.longitude.trunc();
-                    let lon_minutes = (position.value.longitude.fract() * 60.0);
+                    let lon_minutes = position.value.longitude.fract() * 60.0;
                     let lon_min = lon_minutes.trunc();
                     let lon_sec = lon_minutes.fract() * 60.0;
                     let lon_axel = if position.value.longitude > 0.0 {
@@ -389,7 +390,7 @@ impl PositionUnit {
                 PositionUnit::DegreesDecimalMinutes => {
                     // Degrees and decimal minutes (DMM): 41 24.2028, 2 10.4418
                     let lat_deg = position.value.latitude.trunc();
-                    let lat_minutes = (position.value.latitude.fract() * 60.0);
+                    let lat_minutes = position.value.latitude.fract() * 60.0;
                     let lat_axel = if position.value.latitude > 0.0 {
                         "N"
                     } else {
@@ -397,7 +398,7 @@ impl PositionUnit {
                     };
 
                     let lon_deg = position.value.longitude.trunc();
-                    let lon_minutes = (position.value.longitude.fract() * 60.0);
+                    let lon_minutes = position.value.longitude.fract() * 60.0;
                     let lon_axel = if position.value.longitude > 0.0 {
                         "E"
                     } else {
@@ -430,7 +431,7 @@ impl DataUnit for PositionUnit {
         egui::ComboBox::new(format!("position_{}", index), "Unit")
             .selected_text(self.abbreviation())
             .show_ui(ui, |ui| {
-                ui.style_mut().wrap = Some(false);
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
                 ui.set_min_width(60.0);
                 ui.selectable_value(
                     self,
@@ -450,7 +451,7 @@ impl DataUnit for PositionUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, _value: Result<f64, SignalKGetError>) -> String {
         "-----".to_string()
     }
 }
@@ -467,7 +468,7 @@ impl DataUnit for crate::dataunits::DateTimeUnit {
 
     fn add_config(&mut self, _index: usize, _ui: &mut Ui) {}
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, _value: Result<f64, SignalKGetError>) -> String {
         "hh:mm:ss".to_string()
     }
 }

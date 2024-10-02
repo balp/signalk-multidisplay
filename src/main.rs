@@ -20,7 +20,7 @@ async fn main() -> eframe::Result<()> {
     eframe::run_native(
         "SingalK Multidisplay",
         native_options,
-        Box::new(|cc| Box::new(signalk_multidisplay::DisplayApplication::new(cc))),
+        Box::new(|cc| Ok(Box::new(signalk_multidisplay::DisplayApplication::new(cc)))),
     )
 }
 
