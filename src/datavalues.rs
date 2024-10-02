@@ -171,20 +171,44 @@ impl Default for DistanceTraveled {
     }
 }
 
-#[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.environment.depth.belowSurface")]
+#[derive(Debug, PartialEq)]
+// #[data_value(data_path = "self.environment.depth.belowSurface")]
 pub struct DepthOfWater {
     name: String,
     abbreviation: String,
     display_unit: DistanceUnit,
+    path: String,
 }
+impl DataValue for DepthOfWater {
+    fn name(&self) -> String {
+        self.name.to_string()
+    }
 
+    fn unit_name(&self) -> String {
+        self.display_unit.abbreviation()
+    }
+
+    fn abbreviation(&self) -> String {
+        self.abbreviation.to_string()
+    }
+
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
+    }
+
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        let temp = communicator.get_f64_for_path(self.path.clone());
+        self.display_unit.format(temp)
+
+    }
+}
 impl Default for DepthOfWater {
     fn default() -> Self {
         Self {
             name: "Depth Of Water".to_string(),
             abbreviation: "DPT".to_string(),
             display_unit: DistanceUnit::Meters,
+            path: "environment.depth.belowKeel".to_string(),
         }
     }
 }
@@ -545,7 +569,7 @@ impl Default for VelocityMadeGoodUpwind {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.course.crossTrackError")]
+#[data_value(data_path = "navigation.course.calcValues.crossTrackError")]
 pub struct CrossTrackError {
     name: String,
     abbreviation: String,

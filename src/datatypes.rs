@@ -34,7 +34,7 @@
 //  UTC           | Universal time coordinated              | !!+self.navigation.datetime
 //  VMG           | Speed towards designation               | !!self.navigation.course.nextPoint.velocityMadeGood
 //  WND           | Velocity made good upwind               |
-//  XTE           | Cross track error                       | !!self.navigation.course.crossTrackError
+//  XTE           | Cross track error                       | !!self.navigation.course.crossTrackError, navigation.course.calcValues.crossTrackError
 
 use crate::communication::SignalKCommunicator;
 use crate::datavalues::{
