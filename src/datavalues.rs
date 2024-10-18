@@ -199,7 +199,6 @@ impl DataValue for DepthOfWater {
     fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
         let temp = communicator.get_f64_for_path(self.path.clone());
         self.display_unit.format(temp)
-
     }
 }
 impl Default for DepthOfWater {

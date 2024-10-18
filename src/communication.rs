@@ -1,23 +1,37 @@
 use egui::Context;
-use ewebsock::{WsEvent, WsMessage, WsReceiver};
-use signalk::{Storage, V1DeltaFormat, V1Discovery, V1FullFormat};
+use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
+use signalk::{Storage, V1DeltaFormat, V1Discovery, V1FullFormat, V1Subscribe, V1Subscription};
+use std::str::from_utf8;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub struct WebsocketHandler {
     ws_receiver: WsReceiver,
+    ws_sender: WsSender,
 }
 
 impl WebsocketHandler {
     fn recv_signalk_delta_messages(&mut self, storage: &mut Storage) {
-        if let Some(ws_event) = self.ws_receiver.try_recv() {
-            Self::handle_ws_event(storage, ws_event);
+        log::debug!("recv_signalk_delta_messages()",);
+        let got_message = self.ws_receiver.try_recv();
+        log::debug!("got_message: {:?}", got_message);
+        if let Some(ws_event) = got_message {
+            log::debug!("recv_signalk_delta_messages(): {:?}", ws_event);
+            Self::handle_ws_event(self, storage, ws_event);
         }
     }
 
-    fn handle_ws_event(storage: &mut Storage, ws_event: WsEvent) {
+    fn handle_ws_event(&mut self, storage: &mut Storage, ws_event: WsEvent) {
         match ws_event {
             WsEvent::Opened => {
                 log::info!("WebSocket delta opened.");
+                let subscribe = V1Subscribe::builder()
+                    .context("*".to_string())
+                    .subscribe(V1Subscription::builder().path("*".to_string()).build())
+                    .build();
+                if let Ok(s) = serde_json::to_string(&subscribe) {
+                    let message = WsMessage::Text(s.into());
+                    self.ws_sender.send(message);
+                }
             }
             WsEvent::Message(ws_message) => {
                 log::info!("WebSocket message.");
@@ -108,8 +122,11 @@ impl SignalKCommunicator {
     }
 
     fn handle_signalk_data(&mut self) {
+        // log::debug!("handle_signalk_data(): enter");
         if let Some(ref mut storage) = self.signalk_data {
+            //log::debug!("handle_signalk_data(): ");
             if let Some(ref mut ws_handler) = self.ws_handler {
+                // log::debug!("handle_signalk_data(): send message ");
                 ws_handler.recv_signalk_delta_messages(storage);
             }
         }
@@ -171,9 +188,12 @@ impl SignalKCommunicator {
         let wakeup = move || ctx_clone.request_repaint();
         let options = ewebsock::Options::default();
         match ewebsock::connect_with_wakeup(&ws_url, options, wakeup) {
-            Ok((_ws_sender, ws_receiver)) => {
+            Ok((ws_sender, ws_receiver)) => {
                 log::debug!("Websocket connected ok!");
-                self.ws_handler = Some(WebsocketHandler { ws_receiver });
+                self.ws_handler = Some(WebsocketHandler {
+                    ws_receiver,
+                    ws_sender,
+                });
             }
             Err(error) => {
                 log::error!("Failed to connect to {:?}: {}", &ws_url, error);
@@ -200,6 +220,11 @@ impl SignalKCommunicator {
                         if let Err(err) = full_sk_tx.send(full_value) {
                             log::error!("Can't send full back {:?}", err)
                         }
+                    } else {
+                        if let Ok(full_message) = from_utf8(&response.bytes) {
+                            log::warn!("Cant parse: {:?}", full_message);
+                        }
+                        log::warn!("Full Got: {:?}", full);
                     }
                 }
                 Err(err) => {

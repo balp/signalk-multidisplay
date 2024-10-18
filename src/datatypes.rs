@@ -32,7 +32,7 @@
 //  TWD           | True wind direction rel north           | *+self.environment.wind.directionTrue
 //  TWS           | True wind speed relative vessel         | *+self.environment.wind.speedTrue
 //  UTC           | Universal time coordinated              | !!+self.navigation.datetime
-//  VMG           | Speed towards designation               | !!self.navigation.course.nextPoint.velocityMadeGood
+//  VMG           | Speed towards designation               | performance.velocityMadeGoodToWaypoint
 //  WND           | Velocity made good upwind               |
 //  XTE           | Cross track error                       | !!self.navigation.course.crossTrackError, navigation.course.calcValues.crossTrackError
 
