@@ -154,7 +154,7 @@ impl Default for BearingTrue {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.log")]
+#[data_value(data_path = "self.navigation.trip.log")]
 pub struct DistanceTraveled {
     name: String,
     abbreviation: String,
@@ -172,12 +172,11 @@ impl Default for DistanceTraveled {
 }
 
 #[derive(Debug, PartialEq)]
-// #[data_value(data_path = "self.environment.depth.belowSurface")]
 pub struct DepthOfWater {
     name: String,
     abbreviation: String,
     display_unit: DistanceUnit,
-    path: String,
+    paths: Vec<String>,
 }
 impl DataValue for DepthOfWater {
     fn name(&self) -> String {
@@ -197,8 +196,13 @@ impl DataValue for DepthOfWater {
     }
 
     fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
-        let temp = communicator.get_f64_for_path(self.path.clone());
-        self.display_unit.format(temp)
+        for path in self.paths.iter() {
+            let value = communicator.get_f64_for_path(path.clone());
+            if let Ok(_) = value {
+                return self.display_unit.format(value)
+            }
+        }
+        "-----".to_string()
     }
 }
 impl Default for DepthOfWater {
@@ -207,7 +211,11 @@ impl Default for DepthOfWater {
             name: "Depth Of Water".to_string(),
             abbreviation: "DPT".to_string(),
             display_unit: DistanceUnit::Meters,
-            path: "environment.depth.belowKeel".to_string(),
+            paths: vec![
+                "self.environment.depth.belowSurface".to_string(),
+                "self.environment.depth.belowKeel".to_string(),
+                "self.environment.depth.belowTransducer".to_string(),
+            ],
         }
     }
 }

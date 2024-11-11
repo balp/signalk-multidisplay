@@ -184,19 +184,36 @@ impl DataUnit for DistanceUnit {
         match value {
             Ok(val) => match self {
                 DistanceUnit::Meters => {
-                    format!("{:>5.1}", val)
+                    let display_value = val;
+                    if display_value > 1000.0 {
+                        format!("{:>7.0}", display_value)
+                    } else {
+                        format!("{:>5.1}", display_value)
+                    }
                 }
                 DistanceUnit::NauticalMile => {
                     let display_value = val * 1852.;
-                    format!("{:>5.1}", display_value)
+                    if display_value > 1000.0 {
+                        format!("{:>7.0}", display_value)
+                    } else {
+                        format!("{:>5.1}", display_value)
+                    }
                 }
                 DistanceUnit::CableLength => {
                     let display_value = val * 185.2;
-                    format!("{:>5.1}", display_value)
+                    if display_value > 1000.0 {
+                        format!("{:>7.0}", display_value)
+                    } else {
+                        format!("{:>5.1}", display_value)
+                    }
                 }
                 DistanceUnit::Fathom => {
                     let display_value = val * 1.8288;
-                    format!("{:>5.1}", display_value)
+                    if display_value > 1000.0 {
+                        format!("{:>7.0}", display_value)
+                    } else {
+                        format!("{:>5.1}", display_value)
+                    }
                 }
             },
             Err(_) => "-----".to_owned(),
