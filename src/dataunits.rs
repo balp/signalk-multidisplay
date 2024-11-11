@@ -1,11 +1,12 @@
+use crate::communication::WebSocketError;
 use eframe::epaint::text::TextWrapMode;
 use egui::Ui;
-use signalk::{SignalKGetError, V1PositionType};
+use signalk::V1PositionType;
 
 pub trait DataUnit {
     fn abbreviation(&self) -> String;
     fn add_config(&mut self, index: usize, ui: &mut Ui);
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String;
+    fn format(&self, value: Result<f64, WebSocketError>) -> String;
 }
 
 #[derive(Debug, PartialEq)]
@@ -49,7 +50,7 @@ impl DataUnit for SpeedUnit {
                 );
             });
     }
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => match self {
                 SpeedUnit::MeterPerSecond => {
@@ -109,7 +110,7 @@ impl DataUnit for AngularUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => match self {
                 AngularUnit::Radians => {
@@ -124,7 +125,10 @@ impl DataUnit for AngularUnit {
                     format!("{:>5.0}", display_value)
                 }
             },
-            Err(_) => "-----".to_owned(),
+            Err(e) => {
+                log::info!("Angular data has error: {:?}", e);
+                "-----".to_owned()
+            }
         }
     }
 }
@@ -176,7 +180,7 @@ impl DataUnit for DistanceUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => match self {
                 DistanceUnit::Meters => {
@@ -240,7 +244,7 @@ impl DataUnit for TemperatureUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => match self {
                 TemperatureUnit::Celsius => {
@@ -255,7 +259,10 @@ impl DataUnit for TemperatureUnit {
                     format!("{:>5.1}", val)
                 }
             },
-            Err(_) => "-----".to_owned(),
+            Err(e) => {
+                log::info!("unable to format {:?}", e);
+                "-----".to_owned()
+            }
         }
     }
 }
@@ -300,7 +307,7 @@ impl DataUnit for PressureUnit {
             });
     }
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => match self {
                 PressureUnit::HectoPascal => {
@@ -333,7 +340,7 @@ impl DataUnit for VoltageUnit {
 
     fn add_config(&mut self, _index: usize, _ui: &mut Ui) {}
 
-    fn format(&self, value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, value: Result<f64, WebSocketError>) -> String {
         match value {
             Ok(val) => format!("{:>5.1}", val),
             Err(_) => "-----".to_string(),
@@ -462,7 +469,7 @@ impl DataUnit for PositionUnit {
             });
     }
 
-    fn format(&self, _value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, _value: Result<f64, WebSocketError>) -> String {
         "-----".to_string()
     }
 }
@@ -479,7 +486,7 @@ impl DataUnit for crate::dataunits::DateTimeUnit {
 
     fn add_config(&mut self, _index: usize, _ui: &mut Ui) {}
 
-    fn format(&self, _value: Result<f64, SignalKGetError>) -> String {
+    fn format(&self, _value: Result<f64, WebSocketError>) -> String {
         "hh:mm:ss".to_string()
     }
 }

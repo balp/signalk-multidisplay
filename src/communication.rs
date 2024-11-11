@@ -1,8 +1,19 @@
 use egui::Context;
 use ewebsock::{WsEvent, WsMessage, WsReceiver, WsSender};
-use signalk::{Storage, V1DeltaFormat, V1Discovery, V1FullFormat, V1Subscribe, V1Subscription};
+use signalk::{
+    SignalKGetError, Storage, V1DeltaFormat, V1Discovery, V1FullFormat, V1Subscribe, V1Subscription,
+};
 use std::str::from_utf8;
 use std::sync::mpsc::{channel, Receiver, Sender};
+
+#[derive(Debug, PartialEq)]
+pub enum WebSocketError {
+    ServerNotCreated,
+    NoSuchPath,
+    WrongDataType,
+    ValueNotSet,
+    TBD,
+}
 
 pub struct WebsocketHandler {
     ws_receiver: WsReceiver,
@@ -25,8 +36,13 @@ impl WebsocketHandler {
             WsEvent::Opened => {
                 log::info!("WebSocket delta opened.");
                 let subscribe = V1Subscribe::builder()
-                    .context("*".to_string())
-                    .subscribe(V1Subscription::builder().path("*".to_string()).build())
+                    .context("self".to_string())
+                    .subscribe(
+                        V1Subscription::builder()
+                            .path("*".to_string())
+                            .period(5000)
+                            .build(),
+                    )
                     .build();
                 if let Ok(s) = serde_json::to_string(&subscribe) {
                     let message = WsMessage::Text(s.into());
@@ -34,7 +50,7 @@ impl WebsocketHandler {
                 }
             }
             WsEvent::Message(ws_message) => {
-                log::info!("WebSocket message.");
+                log::debug!("WebSocket message.");
                 Self::handle_ws_message(storage, ws_message);
             }
             WsEvent::Error(ws_error) => {
@@ -91,6 +107,7 @@ impl SignalKCommunicator {
         self.ws_handler = None;
     }
     pub(crate) fn set_up_server_connections(&mut self, server: String) {
+        log::info!("set_up_server_connections({})", server);
         let request = ehttp::Request::get(server);
         let (signalk_tx, signalk_rx): (Sender<V1Discovery>, Receiver<V1Discovery>) = channel();
         self.discovery_rx = Some(signalk_rx);
@@ -234,11 +251,27 @@ impl SignalKCommunicator {
         );
     }
 
-    pub(crate) fn get_f64_for_path(&self, path: String) -> Result<f64, signalk::SignalKGetError> {
+    pub(crate) fn get_f64_for_path(&self, path: String) -> Result<f64, WebSocketError> {
         if let Some(ref storage) = self.signalk_data {
-            storage.get_f64_for_path(path)
+            log::debug!("get_f64_for_path: {:?}", path);
+            let res = storage.get_f64_for_path(path.clone());
+            if let Err(e) = res {
+                match e {
+                    SignalKGetError::NoSuchPath => Err(WebSocketError::NoSuchPath),
+                    SignalKGetError::WrongDataType => Err(WebSocketError::WrongDataType),
+                    SignalKGetError::ValueNotSet => Err(WebSocketError::ValueNotSet),
+                    SignalKGetError::TBD => {
+                        log::warn!("Getting value for {:?} not yet implemented.", path);
+                        Err(WebSocketError::TBD)
+                    }
+                }
+            } else if let Ok(v) = res {
+                Ok(v)
+            } else {
+                Err(WebSocketError::TBD)
+            }
         } else {
-            Err(signalk::SignalKGetError::ValueNotSet)
+            Err(WebSocketError::ServerNotCreated)
         }
     }
 }

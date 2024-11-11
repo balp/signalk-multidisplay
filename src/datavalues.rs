@@ -136,7 +136,7 @@ impl Default for Battery {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.course.nextPoint.bearingTrue")]
+#[data_value(data_path = "self.navigation.course.calcValues.bearingTrue")]
 pub struct BearingTrue {
     name: String,
     abbreviation: String,
