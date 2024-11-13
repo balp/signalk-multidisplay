@@ -1,6 +1,7 @@
 use crate::communication::WebSocketError;
 use eframe::epaint::text::TextWrapMode;
 use egui::Ui;
+use signalk::definitions::V1DateTime;
 use signalk::V1PositionType;
 
 pub trait DataUnit {
@@ -192,7 +193,7 @@ impl DataUnit for DistanceUnit {
                     }
                 }
                 DistanceUnit::NauticalMile => {
-                    let display_value = val * 1852.;
+                    let display_value = val / 1852.;
                     if display_value > 1000.0 {
                         format!("{:>7.0}", display_value)
                     } else {
@@ -200,7 +201,7 @@ impl DataUnit for DistanceUnit {
                     }
                 }
                 DistanceUnit::CableLength => {
-                    let display_value = val * 185.2;
+                    let display_value = val / 185.2;
                     if display_value > 1000.0 {
                         format!("{:>7.0}", display_value)
                     } else {
@@ -208,7 +209,7 @@ impl DataUnit for DistanceUnit {
                     }
                 }
                 DistanceUnit::Fathom => {
-                    let display_value = val * 1.8288;
+                    let display_value = val / 1.8288;
                     if display_value > 1000.0 {
                         format!("{:>7.0}", display_value)
                     } else {
@@ -494,6 +495,19 @@ impl DataUnit for PositionUnit {
 #[derive(Debug, PartialEq)]
 pub enum DateTimeUnit {
     Default,
+}
+
+impl DateTimeUnit {
+    pub fn format(&self, value: &Option<V1DateTime>) -> String {
+        if let Some(date) = value {
+            let hour = date.get_hour();
+            let minute = date.get_minute();
+            let second = date.get_second();
+            format!("{:02}:{:02}:{:02}", hour, minute, second).to_string()
+        } else {
+            "--:--:--".to_string()
+        }
+    }
 }
 
 impl DataUnit for crate::dataunits::DateTimeUnit {

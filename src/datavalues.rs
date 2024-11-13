@@ -1,11 +1,12 @@
-use datavalue_derive::DataValue;
-use egui::Ui;
-
-use crate::communication::SignalKCommunicator;
+use crate::communication::WebSocketError::NoSuchPath;
+use crate::communication::{SignalKCommunicator, WebSocketError};
 use crate::dataunits::{
     AngularUnit, DataUnit, DateTimeUnit, DistanceUnit, PositionUnit, PressureUnit, SpeedUnit,
     TemperatureUnit, VoltageUnit,
 };
+use datavalue_derive::DataValue;
+use egui::Ui;
+use signalk::SignalKGetError;
 
 pub trait DataValue {
     fn name(&self) -> String;
@@ -199,7 +200,7 @@ impl DataValue for DepthOfWater {
         for path in self.paths.iter() {
             let value = communicator.get_f64_for_path(path.clone());
             if let Ok(_) = value {
-                return self.display_unit.format(value)
+                return self.display_unit.format(value);
             }
         }
         "-----".to_string()
@@ -239,7 +240,7 @@ impl Default for SpeedOfCurrent {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.course.nextPoint.distance")]
+#[data_value(data_path = "self.navigation.course.calcValues.distance")]
 pub struct DistanceToWaypoint {
     name: String,
     abbreviation: String,
@@ -275,7 +276,7 @@ impl Default for Altitude {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.environment.wind.speedOverGround")]
+#[data_value(data_path = "self.environment.wind.directionMagnetic")]
 pub struct DirectionOfWindRelativeGround {
     name: String,
     abbreviation: String,
@@ -432,7 +433,7 @@ impl Default for crate::datavalues::RudderAngle {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.environment.wind.directionTrue")]
+#[data_value(data_path = "self.environment.wind.speedOverGround")]
 pub struct SpeedOfWindRelativeGround {
     name: String,
     abbreviation: String,
@@ -593,12 +594,45 @@ impl Default for CrossTrackError {
     }
 }
 
-#[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.datetime")]
+#[derive(Debug, PartialEq)]
 pub struct UniversalTimeCoordinated {
     name: String,
     abbreviation: String,
     display_unit: DateTimeUnit,
+}
+
+impl DataValue for UniversalTimeCoordinated {
+    fn name(&self) -> String {
+        self.name.to_string()
+    }
+
+    fn unit_name(&self) -> String {
+        self.display_unit.abbreviation()
+    }
+
+    fn abbreviation(&self) -> String {
+        self.abbreviation.to_string()
+    }
+
+    fn add_config(&mut self, index: usize, ui: &mut Ui) {
+        self.display_unit.add_config(index, ui);
+    }
+
+    fn fmt_value(&self, communicator: &SignalKCommunicator) -> String {
+        if let Some(ref storage) = communicator.signalk_data {
+            if let Some(vessel) = storage.get().get_self() {
+                if let Some(ref navigation) = vessel.navigation {
+                    self.display_unit.format(&navigation.datetime)
+                } else {
+                    "not set".to_string()
+                }
+            } else {
+                "not set".to_string()
+            }
+        } else {
+            "not set".to_string()
+        }
+    }
 }
 
 impl Default for UniversalTimeCoordinated {
@@ -612,7 +646,7 @@ impl Default for UniversalTimeCoordinated {
 }
 
 impl crate::datavalues::UniversalTimeCoordinated {
-    pub fn fmt_time(&self, _communicator: &SignalKCommunicator) -> String {
-        "hh:mm:ss".to_string()
+    pub fn fmt_time(&self, communicator: &SignalKCommunicator) -> String {
+        self.fmt_value(communicator)
     }
 }
