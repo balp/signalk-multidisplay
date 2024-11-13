@@ -1,6 +1,7 @@
 use crate::communication::WebSocketError;
 use eframe::epaint::text::TextWrapMode;
 use egui::Ui;
+use log::{debug, info};
 use signalk::definitions::V1DateTime;
 use signalk::V1PositionType;
 
@@ -182,6 +183,7 @@ impl DataUnit for DistanceUnit {
     }
 
     fn format(&self, value: Result<f64, WebSocketError>) -> String {
+        info!("format() with value: {:?}", value);
         match value {
             Ok(val) => match self {
                 DistanceUnit::Meters => {
@@ -217,7 +219,10 @@ impl DataUnit for DistanceUnit {
                     }
                 }
             },
-            Err(_) => "-----".to_owned(),
+            Err(e) => {
+                info!("Got error: {:?}", e);
+                "-----".to_owned()
+            }
         }
     }
 }

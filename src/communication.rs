@@ -256,6 +256,7 @@ impl SignalKCommunicator {
             log::debug!("get_f64_for_path: {:?}", path);
             let res = storage.get_f64_for_path(path.clone());
             if let Err(e) = res {
+                log::info!("get_f64_for_path: Err({:?})", e);
                 match e {
                     SignalKGetError::NoSuchPath => Err(WebSocketError::NoSuchPath),
                     SignalKGetError::WrongDataType => Err(WebSocketError::WrongDataType),

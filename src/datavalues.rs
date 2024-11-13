@@ -541,7 +541,7 @@ impl Default for WaterTemperature {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.course.nextPoint.velocityMadeGood")]
+#[data_value(data_path = "self.navigation.course.calcValues.velocityMadeGood")]
 pub struct VelocityMadeGood {
     name: String,
     abbreviation: String,
@@ -559,7 +559,7 @@ impl Default for VelocityMadeGood {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "self.navigation.course.nextPoint.velocityMadeGood")]
+#[data_value(data_path = "self.performance.velocityMadeGood")]
 pub struct VelocityMadeGoodUpwind {
     name: String,
     abbreviation: String,
@@ -577,7 +577,7 @@ impl Default for VelocityMadeGoodUpwind {
 }
 
 #[derive(Debug, PartialEq, DataValue)]
-#[data_value(data_path = "navigation.course.calcValues.crossTrackError")]
+#[data_value(data_path = "self.navigation.course.calcValues.crossTrackError")]
 pub struct CrossTrackError {
     name: String,
     abbreviation: String,
