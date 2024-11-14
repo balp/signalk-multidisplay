@@ -1,10 +1,13 @@
-use env_logger;
 use ewebsock::WsEvent;
+
+#[cfg(not(target_arch = "wasm32"))]
+use env_logger;
+
 use std::thread::sleep;
 use std::time::Duration;
 
 fn main() {
-    env_logger::init();
+    init_logging();
     log::info!("Starting WS dump");
     let options = ewebsock::Options::default();
     let result = ewebsock::connect(
@@ -45,4 +48,12 @@ fn main() {
         log::error!("connect failed");
     }
     log::info!("Stopping WS dump");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn init_logging() {
+    env_logger::init();
+}
+#[cfg(target_arch = "wasm32")]
+fn init_logging() {
 }
