@@ -55,5 +55,4 @@ fn init_logging() {
     env_logger::init();
 }
 #[cfg(target_arch = "wasm32")]
-fn init_logging() {
-}
+fn init_logging() {}
