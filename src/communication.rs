@@ -21,7 +21,8 @@ pub struct WebsocketHandler {
 }
 
 impl WebsocketHandler {
-    fn recv_signalk_delta_messages(&mut self, storage: &mut Storage) {
+    fn recv_signalk_delta_messages(&mut self, 
+                                   storage: &mut Storage) {
         log::debug!("recv_signalk_delta_messages()",);
         let got_message = self.ws_receiver.try_recv();
         log::debug!("got_message: {:?}", got_message);
