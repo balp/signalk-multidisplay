@@ -9,7 +9,7 @@ use crate::datatypes::DataValues;
 pub enum Layout {
     SingleValue(SingleValueLayout),
     DualValues(DualValuesLayout),
-    // TripleValues,
+    TripleValues(TripleValuesLayout),
     // FourValues,
 }
 
@@ -18,6 +18,7 @@ impl LayoutComponent for Layout {
         match self {
             Self::SingleValue(layout) => layout.add_config(ui),
             Self::DualValues(layout) => layout.add_config(ui),
+            Self::TripleValues(layout) => layout.add_config(ui),
         }
     }
 
@@ -25,6 +26,7 @@ impl LayoutComponent for Layout {
         match self {
             Self::SingleValue(layout) => layout.draw_ui(ui, communicator),
             Self::DualValues(layout) => layout.draw_ui(ui, communicator),
+            Self::TripleValues(layout) => layout.draw_ui(ui, communicator),
         }
     }
 }
@@ -180,5 +182,149 @@ impl LayoutComponent for DualValuesLayout {
                 });
             });
         });
+    }
+}
+
+pub struct TripleValuesLayout {
+    id: usize,
+    top_value: DataValues,
+    left_value: DataValues,
+    right_value: DataValues,
+}
+
+impl LayoutComponent for TripleValuesLayout {
+    fn add_config(&mut self, ui: &mut Ui) {
+        let Self {
+            id,
+            top_value,
+            left_value,
+            right_value,
+        } = self;
+        ui.label("Triple Value Layout");
+        egui::ComboBox::new(format!("TripleValuesLayout_top_{}", id), "Top Value")
+            .selected_text(top_value.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
+                ui.set_min_width(60.0);
+                top_value.add_config_values(ui);
+            });
+        top_value.add_config(*id, ui);
+        egui::ComboBox::new(format!("TripleValuesLayout_middle_{}", id), "Middle Value")
+            .selected_text(left_value.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
+                ui.set_min_width(60.0);
+                left_value.add_config_values(ui);
+            });
+        left_value.add_config(*id + 1, ui);
+        egui::ComboBox::new(format!("TripleValuesLayout_bottom_{}", id), "Bottom Value")
+            .selected_text(right_value.abbreviation())
+            .show_ui(ui, |ui| {
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Truncate);
+                ui.set_min_width(60.0);
+                right_value.add_config_values(ui);
+            });
+        right_value.add_config(*id + 2, ui);
+    }
+
+    fn draw_ui(&self, ui: &mut Ui, communicator: &SignalKCommunicator) {
+        const SIZE_OF_TOP_MAIN_TEXT: f32 = 150.0;
+        const SIZE_OF_TOP_ABBREVIATION: f32 = 25.0;
+        const SIZE_OF_TOP_UNIT: f32 = 50.0;
+
+        const SIZE_OF_MAIN_TEXT: f32 = 50.0;
+        const SIZE_OF_ABBREVIATION: f32 = 12.5;
+        const SIZE_OF_UNIT: f32 = 25.0;
+
+        ui.vertical_centered_justified(|ui| {
+            ui.group(|ui| {
+                //ui.spacing_mut().item_spacing.x = 0.0;
+                ui.vertical_centered(|ui| {
+                    ui.horizontal(|ui| {
+                        let value = self.top_value.formatted_value(communicator);
+                        ui.label(RichText::new(value).size(SIZE_OF_TOP_MAIN_TEXT).monospace());
+                        ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new(self.top_value.abbreviation())
+                                        .size(SIZE_OF_TOP_ABBREVIATION),
+                                );
+                                ui.label(
+                                    RichText::new(self.top_value.unit_name())
+                                        .size(SIZE_OF_TOP_UNIT),
+                                );
+                            });
+                        });
+                    });
+                });
+            });
+            ui.group(|ui| {
+                //ui.spacing_mut().item_spacing.x = 0.0;
+                ui.vertical_centered(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.group(|ui| {
+                            let value = self.left_value.formatted_value(communicator);
+                            ui.label(RichText::new(value).size(SIZE_OF_MAIN_TEXT).monospace());
+
+                            // ui.spacing_mut().item_spacing.x = 0.0;
+                            // ui.vertical(|ui| {
+                            //     ui.horizontal(|ui| {
+                            //         let value = self.left_value.formatted_value(communicator);
+                            //         ui.label(RichText::new(value).size(SIZE_OF_MAIN_TEXT).monospace());
+                            //         ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new(self.left_value.abbreviation())
+                                        .size(SIZE_OF_ABBREVIATION),
+                                );
+                                ui.label(
+                                    RichText::new(self.left_value.unit_name()).size(SIZE_OF_UNIT),
+                                );
+                            });
+                            //         });
+                            //     });
+                            // });
+                        });
+                        ui.group(|ui| {
+                            let value = self.right_value.formatted_value(communicator);
+                            ui.label(RichText::new(value).size(SIZE_OF_MAIN_TEXT).monospace());
+                            // ui.spacing_mut().item_spacing.x = 0.0;
+                            // ui.vertical(|ui| {
+                            //     ui.horizontal(|ui| {
+                            //         ui.horizontal(|ui| {
+
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new(self.right_value.abbreviation())
+                                        .size(SIZE_OF_ABBREVIATION),
+                                );
+                                ui.label(
+                                    RichText::new(self.right_value.unit_name()).size(SIZE_OF_UNIT),
+                                );
+                            });
+                            //         });
+                            //     });
+                            // });
+                        });
+                    });
+                });
+            });
+        });
+    }
+}
+
+impl TripleValuesLayout {
+    pub fn new(
+        id: usize,
+        top_value: DataValues,
+        left_value: DataValues,
+        right_value: DataValues,
+    ) -> Self {
+        Self {
+            id,
+            top_value,
+            left_value,
+            right_value,
+        }
     }
 }
