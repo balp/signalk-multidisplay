@@ -44,27 +44,27 @@ impl Default for DisplayApplication {
                         crate::datavalues::SpeedThroughWater::default(),
                     ),
                 )),
-                // crate::layouts::Layout::DualValues(crate::layouts::DualValuesLayout::new(
-                //     4,
-                //     crate::datatypes::DataValues::SpeedOverGround(
-                //         crate::datavalues::SpeedOverGround::default(),
-                //     ),
-                //     crate::datatypes::DataValues::CourseOverGround(
-                //         crate::datavalues::CourseOverGround::default(),
-                //     ),
-                // )),
-                // crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
-                //     0,
-                //     crate::datatypes::DataValues::SpeedThroughWater(
-                //         crate::datavalues::SpeedThroughWater::default(),
-                //     ),
-                // )),
-                // crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
-                //     3,
-                //     crate::datatypes::DataValues::WaterTemperature(
-                //         crate::datavalues::WaterTemperature::default(),
-                //     ),
-                // )),
+                crate::layouts::Layout::DualValues(crate::layouts::DualValuesLayout::new(
+                    4,
+                    crate::datatypes::DataValues::SpeedOverGround(
+                        crate::datavalues::SpeedOverGround::default(),
+                    ),
+                    crate::datatypes::DataValues::CourseOverGround(
+                        crate::datavalues::CourseOverGround::default(),
+                    ),
+                )),
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    0,
+                    crate::datatypes::DataValues::SpeedThroughWater(
+                        crate::datavalues::SpeedThroughWater::default(),
+                    ),
+                )),
+                crate::layouts::Layout::SingleValue(crate::layouts::SingleValueLayout::new(
+                    3,
+                    crate::datatypes::DataValues::WaterTemperature(
+                        crate::datavalues::WaterTemperature::default(),
+                    ),
+                )),
             ],
             current_layout: 0,
             last_layout_change: Instant::now(),
